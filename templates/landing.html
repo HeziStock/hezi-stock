@@ -149,6 +149,71 @@
       color: var(--text-soft);
       text-align: center;
     }
+    .a11y-btn {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      border: 2px solid var(--border);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      z-index: 999;
+      box-shadow: 0 4px 16px rgba(74, 158, 255, 0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .a11y-btn:hover { transform: scale(1.08); }
+    .a11y-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+    .a11y-panel {
+      position: fixed;
+      bottom: 4.5rem;
+      right: 1.5rem;
+      width: 280px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+      z-index: 998;
+      display: none;
+    }
+    .a11y-panel.open { display: block; }
+    .a11y-panel h4 { margin: 0 0 0.75rem 0; font-size: 0.95rem; color: var(--text); }
+    .a11y-option { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem; font-size: 0.9rem; }
+    .a11y-option:last-child { margin-bottom: 0; }
+    .a11y-option label { margin: 0; cursor: pointer; color: var(--text-soft); }
+    .a11y-toggle {
+      width: 2.5rem;
+      height: 1.35rem;
+      background: var(--border);
+      border-radius: 999px;
+      position: relative;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .a11y-toggle::after {
+      content: '';
+      position: absolute;
+      width: 1rem;
+      height: 1rem;
+      background: #fff;
+      border-radius: 50%;
+      top: 2px;
+      left: 2px;
+      transition: transform 0.2s;
+    }
+    .a11y-toggle.on { background: var(--accent); }
+    .a11y-toggle.on::after { transform: translateX(1.15rem); }
+    body.a11y-font-large { font-size: 115%; }
+    body.a11y-contrast .hero p, body.a11y-contrast .card p, body.a11y-contrast .section p, body.a11y-contrast .step span, body.a11y-contrast footer { color: var(--text); }
+    body.a11y-reduce-motion *, body.a11y-reduce-motion *::before, body.a11y-reduce-motion *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    body.a11y-underline-links a { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -217,5 +282,66 @@
       HEZI STOCK is not investment advice. Past performance does not guarantee future results. Use of recommendations is at your own responsibility.
     </footer>
   </div>
+  <button type="button" class="a11y-btn" id="a11y-btn" title="Accessibility options" aria-label="Open accessibility options">♿</button>
+  <div class="a11y-panel" id="a11y-panel" role="dialog" aria-label="Accessibility options">
+    <h4>Accessibility</h4>
+    <div class="a11y-option">
+      <label for="a11y-font">Larger text</label>
+      <span class="a11y-toggle" id="a11y-font-toggle" role="switch" aria-checked="false"></span>
+    </div>
+    <div class="a11y-option">
+      <label for="a11y-contrast">High contrast</label>
+      <span class="a11y-toggle" id="a11y-contrast-toggle" role="switch" aria-checked="false"></span>
+    </div>
+    <div class="a11y-option">
+      <label for="a11y-motion">Reduce motion</label>
+      <span class="a11y-toggle" id="a11y-motion-toggle" role="switch" aria-checked="false"></span>
+    </div>
+    <div class="a11y-option">
+      <label for="a11y-links">Underline links</label>
+      <span class="a11y-toggle" id="a11y-links-toggle" role="switch" aria-checked="false"></span>
+    </div>
+  </div>
+  <script>
+    (function a11y() {
+      var key = 'hezi-stock-a11y';
+      var opts = { font: 'a11y-font-large', contrast: 'a11y-contrast', motion: 'a11y-reduce-motion', links: 'a11y-underline-links' };
+      function load() {
+        try {
+          var s = JSON.parse(localStorage.getItem(key) || '{}');
+          Object.keys(opts).forEach(function(k) { if (s[k]) document.body.classList.add(opts[k]); });
+        } catch (_) {}
+      }
+      function save() {
+        var s = {};
+        Object.keys(opts).forEach(function(k) { s[k] = document.body.classList.contains(opts[k]); });
+        localStorage.setItem(key, JSON.stringify(s));
+      }
+      load();
+      var btn = document.getElementById('a11y-btn');
+      var panel = document.getElementById('a11y-panel');
+      if (btn && panel) {
+        btn.addEventListener('click', function() { panel.classList.toggle('open'); });
+        document.addEventListener('click', function(e) {
+          if (panel.classList.contains('open') && !panel.contains(e.target) && e.target !== btn) panel.classList.remove('open');
+        });
+        ['font','contrast','motion','links'].forEach(function(name) {
+          var t = document.getElementById('a11y-' + name + '-toggle');
+          if (!t) return;
+          function update() {
+            var on = document.body.classList.contains(opts[name]);
+            t.classList.toggle('on', on);
+            t.setAttribute('aria-checked', on);
+          }
+          update();
+          t.addEventListener('click', function() {
+            document.body.classList.toggle(opts[name]);
+            save();
+            update();
+          });
+        });
+      }
+    })();
+  </script>
 </body>
 </html>
