@@ -1,0 +1,28 @@
+# Reports and data (user-generated)
+reports/
+*.csv
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+
+# PyInstaller
+build/
+dist/
+*.spec.bak
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Optional: keep config but ignore if it has secrets (uncomment to ignore)
+# config.json

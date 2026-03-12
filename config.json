@@ -1,0 +1,28 @@
+{
+  "use_market_movers": true,
+  "schedule": {
+    "morning_time": "09:00",
+    "evening_time": "18:00",
+    "timezone": "local"
+  },
+  "symbols": [
+    "AAPL",
+    "MSFT",
+    "GOOGL",
+    "AMZN",
+    "META",
+    "NVDA",
+    "TSLA",
+    "JPM",
+    "V",
+    "JNJ"
+  ],
+  "report": {
+    "output_dir": "reports",
+    "keep_days": 90
+  },
+  "notifications": {
+    "desktop": true,
+    "sound": true
+  }
+}
