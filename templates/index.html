@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+{% block head %}
+<script>window.recListForModal = {{ (rec_list[:10] if rec_list is defined and rec_list else []) | tojson }};</script>
+<script>
+(function() {
+  var runStarted = new URLSearchParams(window.location.search).get('run_started');
+  if (!runStarted) return;
+  var loadingBar = document.getElementById('loading-bar');
+  if (loadingBar) loadingBar.style.display = 'flex';
+  var currentReportTime = {{ (insight.generated_at if insight is defined and insight and insight.generated_at else '') | tojson }};
+  var startTime = Date.now();
+  var maxWait = 90000;
+  var interval = setInterval(function() {
+    if (Date.now() - startTime > maxWait) {
+      clearInterval(interval);
+      if (loadingBar) loadingBar.style.display = 'none';
+      return;
+    }
+    fetch('/api/latest')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data.ok || !data.insight || !data.insight.generated_at) return;
+        var newTime = data.insight.generated_at;
+        if (newTime && newTime !== currentReportTime) {
+          var newMs = new Date(newTime).getTime();
+          var oldMs = currentReportTime ? new Date(currentReportTime).getTime() : 0;
+          if (newMs > oldMs) {
+            clearInterval(interval);
+            window.location.replace('/?report_ready=1');
+          }
+        }
+      })
+      .catch(function() {});
+  }, 3000);
+})();
+</script>
+{% endblock %}
+{% block content %}
+<div class="action-bar">
+  <h1>Dashboard</h1>
+  <form method="post" action="{{ url_for('run_now') }}" class="run-form" id="run-form">
+    <button type="submit" class="btn btn-run" id="run-btn" aria-label="Run now to update report and recommendations">▶ Run now — Update report & recommendations</button>
+  </form>
+  <p class="action-hint">Click to update. The page will refresh automatically when the report is ready. <kbd>Ctrl+Enter</kbd> runs now.</p>
+  <p class="run-status" id="run-status" aria-live="polite"></p>
+  {% if last_report_time %}
+  <p class="muted" style="margin: 0.35rem 0 0 0; font-size: 0.85rem;">Last report: <strong>{{ last_report_time }}</strong></p>
+  {% else %}
+  <p class="muted" style="margin: 0.35rem 0 0 0; font-size: 0.85rem;">Last report: No report yet</p>
+  {% endif %}
+</div>
+<div id="loading-bar" class="loading-bar" style="display: none;">
+  <span class="loading-spinner"></span>
+  <span id="loading-bar-text">IN PROGRESS — Updating report… Auto-refresh when ready</span>
+</div>
+<script>
+(function() {
+  var form = document.getElementById('run-form');
+  var statusEl = document.getElementById('run-status');
+  var loadingBar = document.getElementById('loading-bar');
+  var runBtn = document.getElementById('run-btn');
+  if (!form || !statusEl) return;
+  document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); form.requestSubmit(); }
+  });
+  form.addEventListener('submit', function() {
+    statusEl.textContent = '';
+    statusEl.innerHTML = '<span class="status-in-progress">● IN PROGRESS</span> — Running…';
+    statusEl.style.display = 'block';
+    if (loadingBar) loadingBar.style.display = 'flex';
+    if (runBtn) { runBtn.disabled = true; runBtn.style.opacity = '0.7'; }
+  });
+  var runStarted = new URLSearchParams(window.location.search).get('run_started');
+  if (runStarted && statusEl) {
+    statusEl.innerHTML = '<span class="status-in-progress">● IN PROGRESS</span> — Running…';
+    statusEl.style.display = 'block';
+  }
+})();
+</script>
+
+{% if insight %}
+  <div class="card card-summary">
+    <h2>Latest summary</h2>
+    <p class="summary summary-line">{{ insight.summary or '' }}</p>
+  </div>
+  {% if rec_list is defined and rec_list %}
+  <div class="card card-rec" style="border-left: 4px solid var(--gain);">
+    <h2 style="margin-bottom: 1rem;">📌 Entry recommendations — up to 10 stocks (rating 10 = most recommended)</h2>
+    <div class="filter-bar">
+      <label for="min-rating">Show rating ≥</label>
+      <select id="min-rating" aria-label="Minimum rating filter">
+        <option value="0">All (1–10)</option>
+        <option value="7">7+</option>
+        <option value="8">8+</option>
+        <option value="9">9+</option>
+        <option value="10">10 only</option>
+      </select>
+      <a href="{{ url_for('export_recommendations_csv') }}" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Export CSV</a>
+    </div>
+    {% if rec_list|length == 1 %}<p class="muted" style="margin-bottom: 0.75rem; padding: 0.5rem; background: rgba(29,155,240,0.1); border-radius: 8px;">This report shows only one recommendation (old format). <strong>Click «Run now»</strong> to get up to 10 recommendations with rating 1–10 per stock.</p>{% endif %}
+    {% if rec_list|length > 0 and rec_list[0].get('rating') is none %}<p class="muted" style="margin-bottom: 0.75rem;">To get ratings 1–10: run «Run now» again.</p>{% endif %}
+    <div class="rec-table-wrap">
+      <table class="rec-table" id="rec-table">
+        <thead><tr><th>#</th><th>Symbol</th><th>Rating</th><th>Price</th><th>Change today</th></tr></thead>
+        <tbody>
+        {% for rec in rec_list[:10] %}
+        <tr class="rec-row-clickable rec-row" data-rec-index="{{ loop.index0 }}" data-rating="{{ rec.rating or 0 }}" title="Click for quick take — is it worth entering?">
+          <td>{{ loop.index }}</td>
+          <td><a href="https://finance.yahoo.com/quote/{{ rec.symbol }}" target="_blank" rel="noopener noreferrer" class="rec-symbol-link" onclick="event.stopPropagation()"><strong>{{ rec.symbol }}</strong></a>{% if previous_symbols and rec.symbol and (rec.symbol|string|upper) not in previous_symbols %}<span class="badge-new">New</span>{% endif %}</td>
+          <td><span class="rating-badge">{{ rec.rating | default('—') }}/10</span></td>
+          <td>{% if rec.price is not none %}${{ "%.2f"|format(rec.price) }}{% else %}—{% endif %}</td>
+          <td class="positive">{% if rec.change_pct is not none %}{{ "%+.2f"|format(rec.change_pct) }}%{% else %}—{% endif %}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="muted" style="margin: 0.75rem 0 0.5rem 0;">Details per stock (click to compare):</p>
+    <div class="compare-card" id="compare-panel" style="display: none;"></div>
+    {% for rec in rec_list[:10] %}
+    <div class="rec-tile rec-tile-clickable rec-tile-row" data-rec-index="{{ loop.index0 }}" data-rating="{{ rec.rating or 0 }}" title="Click for quick take — is it worth entering?">
+      <div class="rec-header">
+        <span class="rating-badge" title="Rating 1–10 (10 = most recommended)">{{ rec.rating | default('—') }}/10</span>
+        <a href="https://finance.yahoo.com/quote/{{ rec.symbol }}" target="_blank" rel="noopener noreferrer" class="rec-symbol rec-symbol-link" onclick="event.stopPropagation()">{{ rec.symbol }}</a>{% if previous_symbols and rec.symbol and (rec.symbol|string|upper) not in previous_symbols %}<span class="badge-new">New</span>{% endif %}
+        <span class="muted">— {{ rec.name or rec.symbol }}</span>
+        {% if rec.price is not none %}
+        <span class="positive" style="margin-left: auto;">${{ "%.2f"|format(rec.price) }}{% if rec.change_pct is not none %} ({{ "%+.2f"|format(rec.change_pct) }}%){% endif %}</span>
+        {% endif %}
+      </div>
+      <p class="summary summary-line">{{ rec.reason }}</p>
+      {% if rec.get('global_review') %}
+      <p class="rec-global muted" style="font-size: 0.88rem; margin: 0.5rem 0 0 0;"><strong>Global review:</strong> {{ rec.global_review[:200] }}{% if (rec.global_review|length) > 200 %}…{% endif %}</p>
+      {% endif %}
+      <div class="rec-why"><strong>Why enter now:</strong> {{ rec.why_enter_now or rec.reason }}</div>
+    </div>
+    {% endfor %}
+    <p class="muted" style="margin-top: 1rem; margin-bottom: 0;">Based on momentum, volume &amp; analyst rating. Not investment advice. Use your broker to place the order.</p>
+    <div id="rec-modal-overlay" class="rec-modal-overlay" aria-hidden="true">
+      <div class="rec-modal" role="dialog" aria-labelledby="rec-modal-title">
+        <button type="button" class="rec-modal-close" id="rec-modal-close" aria-label="Close">&times;</button>
+        <h3 id="rec-modal-title">—</h3>
+        <div class="rec-modal-meta" id="rec-modal-meta">—</div>
+        <p class="rec-modal-global" id="rec-modal-global"><strong>Global review:</strong> <span id="rec-modal-global-text">—</span></p>
+        <p class="rec-modal-take" id="rec-modal-take">—</p>
+        <p class="rec-modal-verdict" id="rec-modal-verdict">—</p>
+      </div>
+    </div>
+    <script>
+    (function() {
+      var list = window.recListForModal || [];
+      var overlay = document.getElementById('rec-modal-overlay');
+      var title = document.getElementById('rec-modal-title');
+      var meta = document.getElementById('rec-modal-meta');
+      var globalEl = document.getElementById('rec-modal-global-text');
+      var take = document.getElementById('rec-modal-take');
+      var verdict = document.getElementById('rec-modal-verdict');
+      function openModal(index) {
+        var rec = list[index];
+        if (!rec) return;
+        var sym = rec.symbol || '—';
+        var name = rec.name || sym;
+        var rating = rec.rating != null ? rec.rating + '/10' : '—';
+        var price = rec.price != null ? '$' + Number(rec.price).toFixed(2) : '—';
+        var ch = rec.change_pct != null ? (rec.change_pct >= 0 ? '+' : '') + Number(rec.change_pct).toFixed(2) + '%' : '—';
+        title.textContent = sym + ' — ' + name;
+        meta.textContent = 'Rating ' + rating + '  ·  ' + price + '  ·  Today ' + ch;
+        var globalReview = (rec.global_review || '').trim();
+        if (globalEl) globalEl.textContent = globalReview || 'Run report again for full review.';
+        var reason = (rec.reason || '').trim();
+        var why = (rec.why_enter_now || rec.reason || '').trim();
+        take.textContent = (reason ? reason + ' ' : '') + (why && why !== reason ? 'Why enter now: ' + why : '');
+        if (!take.textContent.trim()) take.textContent = 'No extra detail for this stock.';
+        verdict.textContent = 'Quick take: ' + (rating !== '—' ? 'Rating ' + rating + '. ' : '') + 'Based on momentum, volume and analyst view. This is not investment advice — decide for yourself and use your broker.';
+        overlay.classList.add('show');
+        overlay.setAttribute('aria-hidden', 'false');
+      }
+      function closeModal() {
+        overlay.classList.remove('show');
+        overlay.setAttribute('aria-hidden', 'true');
+      }
+      document.querySelectorAll('.rec-row-clickable, .rec-tile-clickable').forEach(function(el) {
+        el.addEventListener('click', function() {
+          var i = parseInt(el.getAttribute('data-rec-index'), 10);
+          if (!isNaN(i)) openModal(i);
+        });
+      });
+      document.getElementById('rec-modal-close').addEventListener('click', closeModal);
+      overlay.addEventListener('click', function(e) { if (e.target === overlay) closeModal(); });
+      document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
+    })();
+    (function() {
+      var minRating = document.getElementById('min-rating');
+      var rows = document.querySelectorAll('.rec-row, .rec-tile-row');
+      function filterByRating() {
+        var min = parseInt(minRating && minRating.value ? minRating.value : 0, 10);
+        rows.forEach(function(row) {
+          var r = parseInt(row.getAttribute('data-rating'), 10) || 0;
+          row.style.display = (min === 0 || r >= min) ? '' : 'none';
+        });
+      }
+      if (minRating) minRating.addEventListener('change', filterByRating);
+      var comparePanel = document.getElementById('compare-panel');
+      var compareSet = [];
+      function renderCompare() {
+        if (!comparePanel || !window.recListForModal) return;
+        if (compareSet.length === 0) { comparePanel.style.display = 'none'; comparePanel.innerHTML = ''; return; }
+        comparePanel.style.display = 'grid';
+        comparePanel.innerHTML = compareSet.slice(0, 3).map(function(idx) {
+          var rec = window.recListForModal[idx];
+          if (!rec) return '';
+          return '<div class="compare-item"><strong>' + (rec.symbol || '') + '</strong> ' + (rec.rating != null ? rec.rating + '/10' : '') + ' &middot; $' + (rec.price != null ? Number(rec.price).toFixed(2) : '—') + ' &middot; ' + (rec.why_enter_now || rec.reason || '').substring(0, 80) + '…</div>';
+        }).join('');
+      }
+      document.querySelectorAll('.rec-row-clickable, .rec-tile-clickable').forEach(function(el) {
+        el.addEventListener('dblclick', function(e) {
+          e.preventDefault();
+          var i = parseInt(el.getAttribute('data-rec-index'), 10);
+          if (isNaN(i)) return;
+          var idx = compareSet.indexOf(i);
+          if (idx >= 0) compareSet.splice(idx, 1);
+          else if (compareSet.length < 3) compareSet.push(i);
+          renderCompare();
+        });
+      });
+    })();
+    </script>
+  </div>
+  <div class="card" style="border-left: 4px solid var(--accent);">
+    <h2 style="margin-bottom: 0.5rem;">📈 Stocks to watch that could continue stronger tomorrow</h2>
+    <p class="muted" style="font-size: 0.9rem; margin-bottom: 1rem;">Based on today’s research (momentum, volume, analysts) — our picks with potential to carry into the next session. Estimate only, not a forecast.</p>
+    <ul style="margin: 0; padding-right: 1.25rem;">
+    {% for rec in rec_list[:10] %}
+    <li style="margin-bottom: 0.5rem;"><a href="https://finance.yahoo.com/quote/{{ rec.symbol }}" target="_blank" rel="noopener noreferrer" class="rec-symbol-link"><strong>{{ rec.symbol }}</strong></a> — {{ rec.name or rec.symbol }} (rating {{ rec.rating | default('—') }}/10). {{ rec.why_enter_now or rec.reason }}</li>
+    {% endfor %}
+    </ul>
+    <p class="muted" style="margin-top: 0.75rem; margin-bottom: 0; font-size: 0.85rem;">This is an estimate based on today’s data only. The market can move the other way. Not investment advice.</p>
+  </div>
+  {% endif %}
+  <div class="grid2">
+    <div class="card">
+      <h2>Consider entering (top gainers)</h2>
+      <table>
+        <thead><tr><th>Symbol</th><th>Name</th><th>Price</th><th>Change %</th></tr></thead>
+        <tbody>
+          {% for r in (insight.top_gainers or []) %}
+          <tr>
+            <td>{{ r.symbol }}</td>
+            <td>{{ (r.name or '')[:20] }}</td>
+            <td>{{ r.price }}</td>
+            <td class="positive">+{{ "%.2f"|format(r.change_pct or 0) }}%</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h2>Consider exiting / watch (top losers)</h2>
+      <table>
+        <thead><tr><th>Symbol</th><th>Name</th><th>Price</th><th>Change %</th></tr></thead>
+        <tbody>
+          {% for r in (insight.top_losers or []) %}
+          <tr>
+            <td>{{ r.symbol }}</td>
+            <td>{{ (r.name or '')[:20] }}</td>
+            <td>{{ r.price }}</td>
+            <td class="negative">{{ "%.2f"|format(r.change_pct or 0) }}%</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Market movers snapshot</h2>
+    <p class="muted">Data from Yahoo Finance day gainers &amp; losers. Full history in Reports. Schedule runs twice daily via Task Scheduler or <code>run_scheduler.py</code>.</p>
+  </div>
+{% else %}
+  <div class="card empty-state">
+    <h2>Run your first report</h2>
+    <p class="summary">Get market movers (gainers &amp; losers), up to 10 entry recommendations with ratings, and a summary. Click below to start.</p>
+    <form method="post" action="{{ url_for('run_now') }}" style="margin-top: 1rem;">
+      <button type="submit" class="btn btn-run">▶ Run now — Update report & recommendations</button>
+    </form>
+  </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Chart – HEZI STOCK{% endblock %}
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+{% block content %}
+<h1>Price history (from reports)</h1>
+<p class="muted">Select a symbol to see the last 10 days of price and change % from your saved history. Data comes from <code>reports/history_*.csv</code>.</p>
+<div class="card" style="margin-bottom: 1rem;">
+  <label for="chart-symbol">Symbol</label>
+  <select id="chart-symbol" style="max-width: 12rem; padding: 0.5rem; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-size: 1rem;">
+    <option value="">— Select —</option>
+    {% for s in symbols %}
+    <option value="{{ s }}">{{ s }}</option>
+    {% endfor %}
+  </select>
+  <p class="muted" style="margin-top: 0.5rem;">Symbols from your latest report. Add more by running "Run now" with market movers.</p>
+</div>
+<div class="card" style="padding: 1.5rem;">
+  <canvas id="chart-canvas" height="280"></canvas>
+  <p id="chart-no-data" class="muted" style="display: none; margin-top: 1rem;">No history data for this symbol. Run "Run now" to build history.</p>
+</div>
+<script>
+(function() {
+  var canvas = document.getElementById('chart-canvas');
+  var ctx = canvas.getContext('2d');
+  var chart = null;
+  var noDataEl = document.getElementById('chart-no-data');
+
+  document.getElementById('chart-symbol').addEventListener('change', function() {
+    var symbol = this.value;
+    if (!symbol) {
+      if (chart) chart.destroy();
+      chart = null;
+      noDataEl.style.display = 'none';
+      return;
+    }
+    fetch('/api/chart/' + encodeURIComponent(symbol) + '?days=10')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data.ok || !data.dates || data.dates.length === 0) {
+          if (chart) chart.destroy();
+          chart = null;
+          noDataEl.style.display = 'block';
+          return;
+        }
+        noDataEl.style.display = 'none';
+        var labels = data.dates.map(function(d) { return d.slice(0, 10); });
+        if (chart) chart.destroy();
+        var gain = getComputedStyle(document.documentElement).getPropertyValue('--gain').trim() || '#22c55e';
+        var textSoft = getComputedStyle(document.documentElement).getPropertyValue('--text-soft').trim() || '#9aa0a6';
+        chart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [
+              { label: 'Price', data: data.prices, borderColor: '#4a9eff', backgroundColor: 'rgba(74, 158, 255, 0.1)', fill: true, yAxisID: 'y' },
+              { label: 'Change %', data: data.changes, borderColor: gain, borderDash: [4,2], yAxisID: 'y1' }
+            ]
+          },
+          options: {
+            responsive: true,
+            interaction: { mode: 'index', intersect: false },
+            plugins: { legend: { labels: { color: textSoft } } },
+            scales: {
+              x: { ticks: { color: textSoft, maxRotation: 45 } },
+              y: { type: 'linear', display: true, position: 'left', ticks: { color: textSoft } },
+              y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false }, ticks: { color: textSoft } }
+            }
+          }
+        });
+      })
+      .catch(function() {
+        if (chart) chart.destroy();
+        chart = null;
+        noDataEl.style.display = 'block';
+      });
+  });
+})();
+</script>
+{% endblock %}

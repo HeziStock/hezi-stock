@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Reports – HEZI STOCK{% endblock %}
+{% block content %}
+<h1>Reports</h1>
+<p class="muted">Download insight (JSON/txt) and history (CSV) files. Stored in the <code>{{ reports_dir }}</code> folder.</p>
+
+<div class="grid2">
+  <div class="card">
+    <h2>Insight reports</h2>
+    {% if insights %}
+    <ul class="reports-list">
+      {% for f in insights %}
+      <li>
+        <a href="{{ url_for('report_file', filename=f.path) }}">{{ f.name }}</a>
+        <span class="muted">{{ f.mtime.strftime('%Y-%m-%d %H:%M') }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted">No insight reports yet. Run a fetch from the Dashboard.</p>
+    {% endif %}
+  </div>
+  <div class="card">
+    <h2>History (CSV)</h2>
+    {% if histories %}
+    <ul class="reports-list">
+      {% for f in histories %}
+      <li>
+        <a href="{{ url_for('report_file', filename=f.path) }}">{{ f.name }}</a>
+        <span class="muted">{{ f.mtime.strftime('%Y-%m-%d %H:%M') }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted">No history files yet.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

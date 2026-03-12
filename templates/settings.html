@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Settings – HEZI STOCK{% endblock %}
+{% block content %}
+<h1>Settings</h1>
+{% if version %}<p class="muted" style="margin: -0.5rem 0 1rem 0;">HEZI STOCK v{{ version }}</p>{% endif %}
+<form method="post" action="{{ url_for('settings') }}">
+  <div class="card form-group">
+    <h2>Data source</h2>
+    <label><input type="checkbox" name="use_market_movers" {% if config.get('use_market_movers', true) %}checked{% endif %}> Use market movers (day gainers &amp; losers – what to enter vs exit)</label>
+    <p class="muted">If unchecked, only your symbol list below is used.</p>
+  </div>
+  <div class="card form-group">
+    <h2>Symbols to track (when not using market movers)</h2>
+    <label>One per line or comma-separated (e.g. AAPL, MSFT, GOOGL)</label>
+    <textarea name="symbols" placeholder="AAPL&#10;MSFT&#10;GOOGL">{{ (config.get('symbols') or []) | join('\n') }}</textarea>
+  </div>
+  <div class="card form-group">
+    <h2>Schedule</h2>
+    <p class="muted">Used by Task Scheduler and <code>run_scheduler.py</code> for morning and evening runs.</p>
+    <label>Morning time</label>
+    <input type="text" name="morning_time" value="{{ config.get('schedule', {}).get('morning_time', '09:00') }}" placeholder="09:00">
+    <label style="margin-top: 0.5rem;">Evening time</label>
+    <input type="text" name="evening_time" value="{{ config.get('schedule', {}).get('evening_time', '18:00') }}" placeholder="18:00">
+  </div>
+  <div class="card form-group">
+    <h2>Notifications</h2>
+    <label><input type="checkbox" name="notify_desktop" {% if config.get('notifications', {}).get('desktop', true) %}checked{% endif %}> Show desktop notification when report is ready</label>
+    <label><input type="checkbox" name="notify_sound" {% if config.get('notifications', {}).get('sound', true) %}checked{% endif %} style="margin-top: 0.5rem;"> Play sound with notification</label>
+  </div>
+  <div class="card form-group">
+    <h2>Portal password (when accessed from network)</h2>
+    <label>Optional. If set, anyone opening the portal from another device (not localhost) must enter this password (HTTP Basic Auth). Leave empty to disable.</label>
+    <input type="password" name="portal_password" value="" placeholder="Type new password to set; leave empty to keep current" autocomplete="new-password" style="margin-top: 0.5rem;">
+  </div>
+  <button type="submit" class="btn">Save settings</button>
+</form>
+<div class="card form-group" style="margin-top: 1.5rem;">
+  <h2>Backup &amp; restore config</h2>
+  <p class="muted">Download your config as a file, or restore from a previously saved file.</p>
+  <p style="margin: 0.5rem 0 0 0;">
+    <a href="{{ url_for('config_backup') }}" class="btn btn-secondary" style="margin-right: 0.5rem;">Download backup</a>
+    <form method="post" action="{{ url_for('config_restore') }}" enctype="multipart/form-data" style="display: inline;">
+      <input type="file" name="config_file" accept=".json,application/json" required aria-label="Select config file">
+      <button type="submit" class="btn btn-secondary">Restore from file</button>
+    </form>
+  </p>
+</div>
+{% endblock %}
