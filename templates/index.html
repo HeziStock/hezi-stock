@@ -115,7 +115,7 @@
         </tbody>
       </table>
     </div>
-    <p class="muted" style="margin: 0.75rem 0 0.5rem 0;">Details per stock (click to compare):</p>
+    <p class="muted" style="margin: 1.25rem 0 0.75rem 0; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.03em;">Details per stock (click row for quick take, double-click to compare)</p>
     <div class="compare-card" id="compare-panel" style="display: none;"></div>
     {% for rec in rec_list[:10] %}
     <div class="rec-tile rec-tile-clickable rec-tile-row" data-rec-index="{{ loop.index0 }}" data-rating="{{ rec.rating or 0 }}" title="Click for quick take — is it worth entering?">
