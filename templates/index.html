@@ -249,6 +249,8 @@
             <td>{{ r.price }}</td>
             <td class="positive">+{{ "%.2f"|format(r.change_pct or 0) }}%</td>
           </tr>
+          {% else %}
+          <tr><td colspan="4" class="muted" style="padding: 1rem; text-align: center;">No gainers in this session. Run again later or check market hours.</td></tr>
           {% endfor %}
         </tbody>
       </table>
@@ -265,6 +267,8 @@
             <td>{{ r.price }}</td>
             <td class="negative">{{ "%.2f"|format(r.change_pct or 0) }}%</td>
           </tr>
+          {% else %}
+          <tr><td colspan="4" class="muted" style="padding: 1rem; text-align: center;">No losers in this session.</td></tr>
           {% endfor %}
         </tbody>
       </table>
