@@ -3,6 +3,7 @@ Fetch current stock prices and basic metrics using yfinance (no API key required
 Also fetches market movers (day gainers / day losers) for "what to enter" vs "what to exit" insights.
 """
 import json
+import time
 from pathlib import Path
 from datetime import datetime
 import yfinance as yf
@@ -89,7 +90,8 @@ def _parse_screener_quotes(quotes: list) -> list[dict]:
 def fetch_market_movers(count: int = MOVERS_COUNT, retries: int = 3) -> tuple[list[dict], list[dict]]:
     """
     Fetch day gainers and day losers from Yahoo Finance screener (real market movers).
-    Returns (gainers, losers). Retries up to retries times if no data.
+    Returns (gainers, losers). Retries with a short delay when gainers come back empty
+    (Yahoo sometimes returns gainers only on 2nd/3rd request).
     """
     gainers_list, losers_list = [], []
     for attempt in range(max(1, retries)):
@@ -105,8 +107,15 @@ def fetch_market_movers(count: int = MOVERS_COUNT, retries: int = 3) -> tuple[li
             losers_list = _parse_screener_quotes(quotes)
         except Exception:
             losers_list = []
-        if (gainers_list or losers_list):
+        # If we have both, we're done
+        if gainers_list and losers_list:
             break
+        # If we got gainers (even without losers), accept and exit
+        if gainers_list:
+            break
+        # Got only losers or nothing — retry after short delay so Yahoo has time to return gainers
+        if attempt < retries - 1:
+            time.sleep(2)
     return (gainers_list or [], losers_list or [])
 
 
