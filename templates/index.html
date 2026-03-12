@@ -41,7 +41,7 @@
   <form method="post" action="{{ url_for('run_now') }}" class="run-form" id="run-form">
     <button type="submit" class="btn btn-run" id="run-btn" aria-label="Run now to update report and recommendations">▶ Run now — Update report & recommendations</button>
   </form>
-  <p class="action-hint">Click to update. The page will refresh automatically when the report is ready. <kbd>Ctrl+Enter</kbd> runs now.</p>
+  <p class="action-hint">Click to update. The page will refresh automatically when the report is ready. <kbd>Ctrl+Enter</kbd> runs now. If nothing happens, the server may be starting (e.g. on free hosting) — wait ~30s and try again.</p>
   <p class="run-status" id="run-status" aria-live="polite"></p>
   {% if last_report_time %}
   <p class="muted" style="margin: 0.35rem 0 0 0; font-size: 0.85rem;">Last report: <strong>{{ last_report_time }}</strong></p>
@@ -65,10 +65,23 @@
   });
   form.addEventListener('submit', function() {
     statusEl.textContent = '';
-    statusEl.innerHTML = '<span class="status-in-progress">● IN PROGRESS</span> — Running…';
+    statusEl.innerHTML = '<span class="status-in-progress">● IN PROGRESS</span> — Sending request…';
     statusEl.style.display = 'block';
     if (loadingBar) loadingBar.style.display = 'flex';
     if (runBtn) { runBtn.disabled = true; runBtn.style.opacity = '0.7'; }
+    var submittedAt = Date.now();
+    var timeoutMs = 18000;
+    var t = window.setTimeout(function() {
+      if (runBtn && runBtn.disabled) {
+        var stillHere = !window.location.search.includes('run_started');
+        if (stillHere) {
+          runBtn.disabled = false;
+          runBtn.style.opacity = '1';
+          statusEl.innerHTML = '<span style="color: var(--text-soft);">Request is taking longer than usual (server may be starting). You can try <strong>Run now</strong> again.</span>';
+          statusEl.style.display = 'block';
+        }
+      }
+    }, timeoutMs);
   });
   var runStarted = new URLSearchParams(window.location.search).get('run_started');
   if (runStarted && statusEl) {
