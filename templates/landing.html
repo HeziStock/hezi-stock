@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html lang="he" dir="rtl">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HEZI STOCK — המלצות מניות יומיות, דירוג וסקירה עולמית</title>
-  <meta name="description" content="עד 10 מניות מומלצות ביום עם דירוג 1–10 וסקירה. דשבורד ווב, הרצה אצלך, בלי מנוי חיצוני.">
+  <title>HEZI STOCK — Daily stock recommendations, ratings & global review</title>
+  <meta name="description" content="Up to 10 stock recommendations per day with 1–10 rating and global review. Web dashboard, automatic runs, no external subscription.">
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #0a0e14;
@@ -23,7 +23,7 @@
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Heebo', 'Segoe UI', sans-serif;
+      font-family: 'DM Sans', 'Segoe UI', sans-serif;
       background: var(--bg);
       color: var(--text);
       line-height: 1.6;
@@ -76,7 +76,7 @@
       color: var(--text);
       border: 1px solid var(--border);
       box-shadow: none;
-      margin-right: 0.75rem;
+      margin-left: 0.75rem;
     }
     .btn-secondary:hover { background: #1a2029; border-color: var(--accent); }
     .section {
@@ -155,73 +155,66 @@
   <div class="wrap">
     <header>
       <span class="logo">HEZI<span> STOCK</span></span>
-      <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">כניסה לאפליקציה</a>
     </header>
 
     <section class="hero">
-      <h1>המלצות כניסה יומיות — אצלך על המחשב</h1>
-      <p>מדי יום רשימת מניות לכניסה עם דירוג 1–10, סקירה עולמית (מגזר, אנליסטים, חדשות) והסבר למה עכשיו. דשבורד ווב, הרצה אוטומטית והתראות. רץ אצלך — בלי API, בלי להעביר נתונים החוצה.</p>
-      <a href="{{ url_for('dashboard') }}" class="btn">כניסה לדשבורד</a>
+      <h1>Daily entry recommendations — know where to enter</h1>
+      <p>Every day a list of stocks to consider entering, with a 1–10 rating, global review (sector, analysts, news), and why now. Web dashboard, automatic runs, and notifications. No API key required.</p>
+      <a href="{{ url_for('dashboard') }}" class="btn">Enter dashboard</a>
     </section>
 
     <section class="section">
-      <h2>למה HEZI STOCK?</h2>
+      <h2>Why HEZI STOCK?</h2>
       <div class="cards">
         <div class="card">
-          <h3>עד 10 המלצות ביום</h3>
-          <p>דירוג 1–10, סקירה עולמית וחדשות אחרונות לכל מניה.</p>
+          <h3>Up to 10 recommendations per day</h3>
+          <p>Rating 1–10, global review and latest news for each stock.</p>
         </div>
         <div class="card">
-          <h3>הכל אצלך</h3>
-          <p>רץ על המחשב או השרת שלך, בלי מנוי חיצוני ובלי ענן.</p>
+          <h3>Simple to run</h3>
+          <p>Automatic morning/evening runs or "Run now" with one click.</p>
         </div>
         <div class="card">
-          <h3>פשוט להפעיל</h3>
-          <p>הרצה אוטומטית בוקר/ערב או "Run now" בלחיצה.</p>
-        </div>
-        <div class="card">
-          <h3>מוכן לשימוש</h3>
-          <p>דשבורד ווב, ייצוא CSV, התראות וגישה מהרשת עם סיסמה.</p>
+          <h3>Ready to use</h3>
+          <p>Web dashboard, CSV export, notifications and optional password for network access.</p>
         </div>
       </div>
     </section>
 
     <section class="section">
-      <h2>למי זה מתאים?</h2>
-      <p style="color: var(--text-soft); margin-bottom: 1rem;">משקיעים פרטיים, סוחרים ויועצים — רוצים רעיונות כניסה מבוססי נתונים, מומנטום ו-volume ליום המחר, וכלי עזר לסינון ולדירוג מובילי שוק.</p>
+      <h2>Who is it for?</h2>
+      <p style="color: var(--text-soft); margin-bottom: 1rem;">Private investors, traders and advisers — data-driven entry ideas, momentum and volume for the next session, and a tool to filter and rank market movers.</p>
     </section>
 
     <section class="section">
-      <h2>איך זה עובד?</h2>
+      <h2>How it works</h2>
       <div class="steps">
         <div class="step">
           <div class="step-num">1</div>
-          <strong>התקנה</strong>
-          <span>מתקין אצלך או אצל הלקוח. הרצה אחת.</span>
+          <strong>Open the dashboard</strong>
+          <span>Log in and see the latest report and recommendations.</span>
         </div>
         <div class="step">
           <div class="step-num">2</div>
-          <strong>הרצה</strong>
-          <span>אוטומטית בוקר/ערב, או "Run now" מתי שאתה רוצה.</span>
+          <strong>Run</strong>
+          <span>Automatic morning/evening runs, or click "Run now" when you want.</span>
         </div>
         <div class="step">
           <div class="step-num">3</div>
-          <strong>צפייה</strong>
-          <span>נכנס לדשבורד, רואה המלצות עם דירוג וסקירה, מייצא ל-CSV.</span>
+          <strong>Review</strong>
+          <span>See recommendations with rating and global review, export to CSV or open on Yahoo.</span>
         </div>
       </div>
     </section>
 
     <div class="cta-box">
-      <p>מעוניין במחיר, בדמו או בהתקנה? כנס לאפליקציה או צור קשר.</p>
       <div class="cta-buttons">
-        <a href="{{ url_for('dashboard') }}" class="btn">כניסה לדשבורד</a>
-        <a href="mailto:hezi.marudi@gmail.com?subject=HEZI%20STOCK%20-%20דמו%20או%20מחיר" class="btn btn-secondary">ליצור קשר</a>
+        <a href="mailto:hezi.marudi@gmail.com?subject=HEZI%20STOCK%20-%20Demo%20or%20pricing" class="btn">Contact</a>
       </div>
     </div>
 
     <footer>
-      HEZI STOCK אינו ייעוץ השקעות. ביצועים בעבר אינם מבטיחים תוצאות בעתיד. השימוש בהמלצות על אחריות המשתמש.
+      HEZI STOCK is not investment advice. Past performance does not guarantee future results. Use of recommendations is at your own responsibility.
     </footer>
   </div>
 </body>
