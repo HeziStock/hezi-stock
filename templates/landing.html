@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HEZI STOCK — Daily stock recommendations, ratings & global review</title>
-  <meta name="description" content="Up to 10 stock recommendations per day with 1–10 rating and global review. Web dashboard, automatic runs, no external subscription.">
+  <meta name="description" content="Daily stock entry ideas with 1–10 ratings and why-enter-now. Scans market movers, ranks the best ideas, one dashboard, one click. No API key required.">
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -223,32 +223,45 @@
     </header>
 
     <section class="hero">
-      <h1>Daily entry recommendations — know where to enter</h1>
-      <p>Every day a list of stocks to consider entering, with a 1–10 rating, global review (sector, analysts, news), and why now. Web dashboard, automatic runs, and notifications. No API key required.</p>
-      <a href="{{ url_for('dashboard') }}" class="btn">Enter dashboard</a>
+      <h1>Stop guessing. Get a shortlist of stocks worth entering — every day.</h1>
+      <p>HEZI STOCK scans the market, ranks the best movers 1–10, and tells you <strong>why each stock is worth a look</strong> and why now. One dashboard. One click. No endless scrolling.</p>
+      <a href="{{ url_for('dashboard') }}" class="btn">Open dashboard — see your first report</a>
+    </section>
+
+    <section class="section">
+      <h2>What the tool actually does</h2>
+      <p style="color: var(--text-soft); margin-bottom: 1.5rem; max-width: 640px;">Every run does the same thing: it pulls today’s top gainers and losers from the market, scores each stock from 1 to 10 (10 = strongest idea), and adds a short <strong>global review</strong> (sector, analysts, news) plus a <strong>“why enter now”</strong> line. You get up to 10 entry ideas per run — not hundreds of tickers, just a focused list with context.</p>
+      <ul style="color: var(--text-soft); margin: 0 0 1rem 0; padding-left: 1.25rem; max-width: 640px;">
+        <li style="margin-bottom: 0.5rem;">Scans <strong>market movers</strong> (gainers &amp; losers) from live data</li>
+        <li style="margin-bottom: 0.5rem;">Ranks each stock <strong>1–10</strong> so you focus on the best ideas first</li>
+        <li style="margin-bottom: 0.5rem;">Adds a <strong>global review</strong> (sector, analysts, news) per stock</li>
+        <li style="margin-bottom: 0.5rem;">Explains <strong>why enter now</strong> — momentum, volume, and context in one place</li>
+        <li>One-click <strong>Run now</strong>, CSV export, and links to Yahoo Finance for deeper research</li>
+      </ul>
+      <p style="color: var(--text-soft); margin-bottom: 0;">You don’t need an API key or a subscription. Open the dashboard, click Run now, and in a minute you’ll see your first report.</p>
     </section>
 
     <section class="section">
       <h2>Why HEZI STOCK?</h2>
       <div class="cards">
         <div class="card">
-          <h3>Up to 10 recommendations per day</h3>
-          <p>Rating 1–10, global review and latest news for each stock.</p>
+          <h3>Save time</h3>
+          <p>No more scanning hundreds of tickers. You get a ranked shortlist of up to 10 ideas with ratings and “why now” — so you can decide faster.</p>
         </div>
         <div class="card">
-          <h3>Simple to run</h3>
-          <p>Automatic morning/evening runs or "Run now" with one click.</p>
+          <h3>Data-driven, not noise</h3>
+          <p>Recommendations are based on momentum, volume, and analyst data. Each stock has a 1–10 score and a short global review so you know what you’re looking at.</p>
         </div>
         <div class="card">
-          <h3>Ready to use</h3>
-          <p>Web dashboard, CSV export, notifications and optional password for network access.</p>
+          <h3>Ready in one click</h3>
+          <p>Web dashboard, Run now when you want, CSV export, and optional alerts. No setup — just open and run.</p>
         </div>
       </div>
     </section>
 
     <section class="section">
       <h2>Who is it for?</h2>
-      <p style="color: var(--text-soft); margin-bottom: 1rem;">Private investors, traders and advisers — data-driven entry ideas, momentum and volume for the next session, and a tool to filter and rank market movers.</p>
+      <p style="color: var(--text-soft); margin-bottom: 1rem;">Private investors, day traders, and advisers who want <strong>clear entry ideas</strong> instead of raw lists. If you care about momentum, volume, and a quick “why now” for each idea, HEZI STOCK gives you a shortlist you can act on — or dig deeper on Yahoo with one click.</p>
     </section>
 
     <section class="section">
@@ -257,20 +270,26 @@
         <div class="step">
           <div class="step-num">1</div>
           <strong>Open the dashboard</strong>
-          <span>Log in and see the latest report and recommendations.</span>
+          <span>One click from here. No signup required to see the interface.</span>
         </div>
         <div class="step">
           <div class="step-num">2</div>
-          <strong>Run</strong>
-          <span>Automatic morning/evening runs, or click "Run now" when you want.</span>
+          <strong>Run now</strong>
+          <span>Click “Run now” once. The tool fetches movers, ranks them, and builds your report. The page refreshes when it’s ready.</span>
         </div>
         <div class="step">
           <div class="step-num">3</div>
-          <strong>Review</strong>
-          <span>See recommendations with rating and global review, export to CSV or open on Yahoo.</span>
+          <strong>Use the list</strong>
+          <span>See ratings 1–10, “why enter now,” and global review. Export to CSV, open any symbol on Yahoo, or filter by minimum rating.</span>
         </div>
       </div>
     </section>
+
+    <div class="cta-box" style="border: 1px solid rgba(74, 158, 255, 0.35); background: linear-gradient(180deg, var(--accent-dim) 0%, var(--bg) 100%);">
+      <p style="color: var(--text); font-weight: 600; margin-bottom: 0.75rem;">See it yourself — your first report is one click away.</p>
+      <a href="{{ url_for('dashboard') }}" class="btn" style="margin-bottom: 1rem;">Open dashboard</a>
+      <p style="font-size: 0.9rem; color: var(--text-soft); margin: 0 0 1.25rem 0;">Questions or want a demo? Get in touch below.</p>
+    </div>
 
     <div class="cta-box">
       <div class="cta-buttons">
