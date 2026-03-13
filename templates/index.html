@@ -36,23 +36,23 @@
 </script>
 {% endblock %}
 {% block content %}
-<div class="action-bar action-bar--centered">
+<div class="action-bar action-bar--centered" data-report-time="{{ (insight.generated_at if insight is defined and insight and insight.generated_at else '') | default('', true) }}">
   <p class="action-bar-tagline">Your next trade idea is one click away — every day.</p>
   <h1>Dashboard</h1>
   <form method="post" action="{{ url_for('run_now') }}" class="run-form" id="run-form">
-    <button type="submit" class="btn btn-run" id="run-btn" aria-label="Run now to update report and recommendations">▶ Run now — Update report & recommendations</button>
+    <button type="submit" class="btn btn-run" id="run-btn" aria-label="Run now to update report and recommendations">▶ Run now</button>
   </form>
-  <p class="action-hint">Click <strong>Run now</strong> to update. The page will refresh automatically when the report is ready. If nothing happens, the server may be starting (e.g. on free hosting) — wait ~30s and try again.</p>
-  <p class="run-status" id="run-status" aria-live="polite"></p>
+  <p class="action-hint">Report updates automatically when new data is ready. You can also run an update manually anytime.</p>
+  <p class="run-status" id="run-status" aria-live="polite" style="display: none;"></p>
   {% if last_report_time %}
-  <p class="muted" style="margin: 0.35rem 0 0 0; font-size: 0.85rem;">Last report: <strong>{{ last_report_time }}</strong></p>
+  <p class="muted action-bar-meta">Last report: <strong>{{ last_report_time }}</strong></p>
   {% else %}
-  <p class="muted" style="margin: 0.35rem 0 0 0; font-size: 0.85rem;">Last report: No report yet</p>
+  <p class="muted action-bar-meta">Last report: No report yet</p>
   {% endif %}
 </div>
 <div id="loading-bar" class="loading-bar" style="display: none;">
   <span class="loading-spinner"></span>
-  <span id="loading-bar-text">IN PROGRESS — Updating report… Auto-refresh when ready</span>
+  <span id="loading-bar-text">Updating report…</span>
 </div>
 <script>
 (function() {
@@ -60,32 +60,49 @@
   var statusEl = document.getElementById('run-status');
   var loadingBar = document.getElementById('loading-bar');
   var runBtn = document.getElementById('run-btn');
+  var actionBar = document.querySelector('.action-bar');
   if (!form || !statusEl) return;
+
+  // Auto-update: poll for newer report and reload when available
+  var currentReportTime = (actionBar && actionBar.getAttribute('data-report-time')) || '';
+  var pollIntervalMs = 60000;
+  var pollTimer = setInterval(function() {
+    if (document.hidden) return;
+    fetch('/api/latest').then(function(r) { return r.json(); }).then(function(data) {
+      if (!data.ok || !data.insight || !data.insight.generated_at) return;
+      var newTime = data.insight.generated_at;
+      if (!newTime) return;
+      var newMs = new Date(newTime).getTime();
+      var oldMs = currentReportTime ? new Date(currentReportTime).getTime() : 0;
+      if (newMs > oldMs) {
+        clearInterval(pollTimer);
+        window.location.reload();
+      }
+    }).catch(function() {});
+  }, pollIntervalMs);
+
   document.addEventListener('keydown', function(e) {
     if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); form.requestSubmit(); }
   });
   form.addEventListener('submit', function() {
-    statusEl.textContent = '';
-    statusEl.innerHTML = '<span class="status-in-progress">● IN PROGRESS</span> — Sending request…';
+    statusEl.innerHTML = '<span class="status-in-progress">Updating…</span>';
     statusEl.style.display = 'block';
     if (loadingBar) loadingBar.style.display = 'flex';
     if (runBtn) { runBtn.disabled = true; runBtn.style.opacity = '0.7'; }
-    var timeoutMs = 18000;
     window.setTimeout(function() {
       if (runBtn && runBtn.disabled) {
-        var stillHere = !window.location.search.includes('run_started');
-        if (stillHere) {
+        if (!window.location.search.includes('run_started')) {
           runBtn.disabled = false;
           runBtn.style.opacity = '1';
-          statusEl.innerHTML = '<span style="color: var(--text-soft);">Request is taking longer than usual (server may be starting). You can try <strong>Run now</strong> again.</span>';
+          statusEl.innerHTML = '<span style="color: var(--text-soft);">Taking longer than usual. Try <strong>Run now</strong> again.</span>';
           statusEl.style.display = 'block';
         }
       }
-    }, timeoutMs);
+    }, 18000);
   });
   var runStarted = new URLSearchParams(window.location.search).get('run_started');
   if (runStarted && statusEl) {
-    statusEl.innerHTML = '<span class="status-in-progress">● IN PROGRESS</span> — Running…';
+    statusEl.innerHTML = '<span class="status-in-progress">Updating…</span>';
     statusEl.style.display = 'block';
   }
 })();
