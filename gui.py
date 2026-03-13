@@ -14,7 +14,7 @@ import pandas as pd
 # Project root on path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from stock_fetcher import load_config, fetch_prices, fetch_market_movers
+from stock_fetcher import load_config, fetch_prices, fetch_market_movers, fetch_extended_movers
 from report_generator import (
     append_to_history,
     build_insights,
@@ -307,9 +307,9 @@ class StockTrackerApp:
                 cfg = load_cfg()
                 use_market_movers = cfg.get("use_market_movers", True)
                 if use_market_movers:
-                    gainers, losers = fetch_market_movers()
+                    gainers, losers, entry_candidates = fetch_extended_movers()
                     df = movers_to_dataframe(gainers, losers)
-                    recommendation = research_and_recommend(gainers)
+                    recommendation = research_and_recommend(entry_candidates, max_candidates=50)
                     insights = build_insights_from_movers(gainers, losers, recommendation=recommendation)
                 else:
                     symbols = cfg.get("symbols") or []

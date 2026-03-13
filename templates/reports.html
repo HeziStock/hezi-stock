@@ -1,38 +1,38 @@
 {% extends "base.html" %}
 {% block title %}Reports – HEZI STOCK{% endblock %}
 {% block content %}
-<h1>Reports</h1>
-<p class="muted">Download insight (JSON/txt) and history (CSV) files. Stored in the <code>{{ reports_dir }}</code> folder.</p>
+<h1 class="text-2xl font-bold mb-2">Reports</h1>
+<p class="muted mb-6">Download insight (JSON/txt) and history (CSV) files. Stored in the <code class="bg-gray-100 px-1.5 py-0.5 rounded text-gray-700">{{ reports_dir }}</code> folder.</p>
 
-<div class="grid2">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
   <div class="card">
-    <h2>Insight reports</h2>
+    <h3 class="font-semibold mb-3">Insight reports</h3>
     {% if insights %}
-    <ul class="reports-list">
+    <ul class="space-y-2">
       {% for f in insights %}
-      <li>
-        <a href="{{ url_for('report_file', filename=f.path) }}">{{ f.name }}</a>
-        <span class="muted">{{ f.mtime.strftime('%Y-%m-%d %H:%M') }}</span>
+      <li class="flex items-center justify-between gap-3 py-2 border-t border-gray-100 first:border-0">
+        <a href="{{ url_for('report_file', filename=f.path) }}" class="text-blue-600 hover:underline">{{ f.name }}</a>
+        <span class="muted text-xs shrink-0">{{ f.mtime.strftime('%Y-%m-%d %H:%M') }}</span>
       </li>
       {% endfor %}
     </ul>
     {% else %}
-    <p class="muted">No insight reports yet. Run a fetch from the Dashboard.</p>
+    <p class="muted text-sm">No insight reports yet. Run a scan from the Dashboard.</p>
     {% endif %}
   </div>
   <div class="card">
-    <h2>History (CSV)</h2>
+    <h3 class="font-semibold mb-3">History (CSV)</h3>
     {% if histories %}
-    <ul class="reports-list">
+    <ul class="space-y-2">
       {% for f in histories %}
-      <li>
-        <a href="{{ url_for('report_file', filename=f.path) }}">{{ f.name }}</a>
-        <span class="muted">{{ f.mtime.strftime('%Y-%m-%d %H:%M') }}</span>
+      <li class="flex items-center justify-between gap-3 py-2 border-t border-gray-100 first:border-0">
+        <a href="{{ url_for('report_file', filename=f.path) }}" class="text-blue-600 hover:underline">{{ f.name }}</a>
+        <span class="muted text-xs shrink-0">{{ f.mtime.strftime('%Y-%m-%d %H:%M') }}</span>
       </li>
       {% endfor %}
     </ul>
     {% else %}
-    <p class="muted">No history files yet.</p>
+    <p class="muted text-sm">No history files yet.</p>
     {% endif %}
   </div>
 </div>

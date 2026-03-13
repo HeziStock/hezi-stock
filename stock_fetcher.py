@@ -11,6 +11,8 @@ import pandas as pd
 
 # How many top gainers/losers to fetch from Yahoo screener
 MOVERS_COUNT = 25
+# Minimum candidates to scan before picking top 10 (multi-screen)
+MIN_CANDIDATES_FOR_TOP10 = 40
 
 
 def load_config():
@@ -117,6 +119,70 @@ def fetch_market_movers(count: int = MOVERS_COUNT, retries: int = 3) -> tuple[li
         if attempt < retries - 1:
             time.sleep(2)
     return (gainers_list or [], losers_list or [])
+
+
+def _fetch_one_screen(screen_name: str, count: int) -> list[dict]:
+    """Fetch one Yahoo Finance screener; return list of dicts (symbol, name, price, change_pct, volume)."""
+    try:
+        raw = yf.screen(screen_name, count=count)
+        quotes = raw.get("quotes") if isinstance(raw, dict) else []
+        return _parse_screener_quotes(quotes)
+    except Exception:
+        return []
+
+
+def fetch_extended_movers(
+    count_per_screen: int = 40,
+    min_entry_candidates: int = MIN_CANDIDATES_FOR_TOP10,
+) -> tuple[list[dict], list[dict], list[dict]]:
+    """
+    Scan multiple Yahoo Finance screens (gainers, losers, most active) to build a large candidate pool.
+    Returns (gainers, losers, entry_candidates) where entry_candidates has at least min_entry_candidates
+    symbols (when available) for research_and_recommend to pick the top 10 from.
+    """
+    gainers = []
+    losers = []
+    most_active = []
+    for attempt in range(3):
+        gainers = _fetch_one_screen("day_gainers", count_per_screen)
+        losers = _fetch_one_screen("day_losers", count_per_screen)
+        try:
+            most_active = _fetch_one_screen("most_actives", count_per_screen)
+        except Exception:
+            try:
+                most_active = _fetch_one_screen("most_active", count_per_screen)
+            except Exception:
+                most_active = []
+        if gainers:
+            break
+        time.sleep(2)
+
+    # Build entry_candidates: gainers first, then from most_actives any with positive change_pct (not already in gainers)
+    by_symbol = {}
+    for g in gainers or []:
+        sym = g.get("symbol")
+        if sym:
+            by_symbol[sym] = g
+    for m in most_active or []:
+        sym = m.get("symbol")
+        if not sym or sym in by_symbol:
+            continue
+        pct = m.get("change_pct")
+        if pct is not None and pct > 0:
+            by_symbol[sym] = m
+    entry_candidates = list(by_symbol.values())
+    entry_candidates.sort(key=lambda x: (x.get("change_pct") or 0), reverse=True)
+    if len(entry_candidates) < min_entry_candidates and (gainers or most_active):
+        already = {x.get("symbol") for x in entry_candidates if x.get("symbol")}
+        for m in (most_active or []):
+            if len(entry_candidates) >= min_entry_candidates:
+                break
+            sym = m.get("symbol")
+            if sym and sym not in already:
+                already.add(sym)
+                entry_candidates.append(m)
+        entry_candidates.sort(key=lambda x: (x.get("change_pct") or -999), reverse=True)
+    return (gainers or [], losers or [], entry_candidates)
 
 
 if __name__ == "__main__":

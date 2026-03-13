@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parent
 import sys
 sys.path.insert(0, str(ROOT))
 
-from stock_fetcher import load_config, fetch_prices, fetch_market_movers
+from stock_fetcher import load_config, fetch_prices, fetch_market_movers, fetch_extended_movers
 from report_generator import (
     append_to_history,
     build_insights,
@@ -56,7 +56,7 @@ app.secret_key = _get_secret_key()
 
 @app.context_processor
 def inject_version():
-    return {"version": __version__}
+    return {"version": __version__, "now": datetime.now}
 
 
 def _portal_password_required():
@@ -197,12 +197,12 @@ def run_fetch():
         cfg = load_cfg()
         use_market_movers = cfg.get("use_market_movers", True)
         if use_market_movers:
-            gainers, losers = fetch_market_movers()
-            if not gainers and not losers:
+            gainers, losers, entry_candidates = fetch_extended_movers()
+            if not gainers and not losers and not entry_candidates:
                 return
             df = movers_to_dataframe(gainers, losers)
             append_to_history(df)
-            recommendation = research_and_recommend(gainers)
+            recommendation = research_and_recommend(entry_candidates, max_candidates=50)
             insights = build_insights_from_movers(gainers, losers, recommendation=recommendation)
         else:
             symbols = cfg.get("symbols") or []
@@ -273,45 +273,45 @@ def index():
     return render_template("landing.html")
 
 
-@app.route("/app")
-def dashboard():
-    """Main app: dashboard with recommendations and run now."""
+def _safe_dashboard_data():
+    """Load dashboard data; never raise — return safe defaults on any error."""
     try:
         insight = get_latest_insight()
-        if isinstance(insight, dict):
+        if not isinstance(insight, dict):
+            insight = None
+        if insight:
             insight.setdefault("top_gainers", [])
             insight.setdefault("top_losers", [])
             insight.setdefault("summary", "")
-        else:
-            insight = None
         rec_list = _normalize_rec_list(insight) if insight else []
         last_report_time = None
         if insight and insight.get("generated_at"):
             try:
-                from datetime import datetime
                 dt = datetime.fromisoformat(insight["generated_at"].replace("Z", "+00:00"))
                 last_report_time = dt.strftime("%Y-%m-%d %H:%M")
             except Exception:
                 last_report_time = str(insight.get("generated_at", ""))[:16]
-        previous_symbols = _get_previous_rec_symbols()
-        return render_template(
-            "index.html",
-            insight=insight,
-            rec_list=rec_list,
-            last_report_time=last_report_time,
-            previous_symbols=previous_symbols,
-        )
-    except Exception as e:
-        logging.exception("Dashboard failed")
         try:
-            flash("Error loading dashboard: " + str(e), "error")
-            return render_template("index.html", insight=None, rec_list=[], last_report_time=None, previous_symbols=set())
+            previous_symbols = _get_previous_rec_symbols()
         except Exception:
-            return Response(
-                "<h1>Error</h1><p>Dashboard failed. Check the server console for details.</p><a href='/app'>Try again</a>",
-                status=500,
-                mimetype="text/html",
-            )
+            previous_symbols = set()
+        return insight, rec_list, last_report_time, previous_symbols
+    except Exception as e:
+        logging.warning("Dashboard data load failed: %s", e)
+        return None, [], None, set()
+
+
+@app.route("/app")
+def dashboard():
+    """Main app: dashboard (inventory UI or insights). Never returns 500."""
+    insight, rec_list, last_report_time, previous_symbols = _safe_dashboard_data()
+    return render_template(
+        "index.html",
+        insight=insight,
+        rec_list=rec_list,
+        last_report_time=last_report_time,
+        previous_symbols=previous_symbols or set(),
+    )
 
 
 @app.route("/run", methods=["POST"])

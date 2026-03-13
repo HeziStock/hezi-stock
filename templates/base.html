@@ -4,72 +4,67 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{% block title %}HEZI STOCK{% endblock %}</title>
-
-  <!-- Tailwind (no build) -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
-
   <style>
-    /* small visual polish */
-    .card { @apply bg-white/5 border border-white/5 rounded-2xl p-5 shadow-sm; }
-    .muted { color: #9aa6b2; }
-    .rating-pill { @apply inline-flex items-center gap-2 bg-gradient-to-r from-amber-400 to-amber-500 text-black px-3 py-1 rounded-full font-semibold text-sm; }
-    .btn-primary { @apply bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 py-2 rounded-lg font-semibold shadow-md hover:opacity-95; }
-    .btn-ghost { @apply border border-white/10 px-3 py-2 rounded-lg text-sm; }
-    .table-row-hover:hover { @apply bg-white/2; }
-    :root {
-      --gain: #22c55e;
-      --loss: #ef4444;
-      --accent: #2563eb;
-    }
+    .sidebar-link.active { background: #1e3a5f; color: #fff; }
+    .sidebar-link:not(.active):hover { background: #e5e7eb; }
+    .card { @apply bg-white rounded-2xl p-6 shadow-md border border-gray-100; transition: box-shadow 0.2s, transform 0.2s; }
+    .card:hover { box-shadow: 0 10px 40px -10px rgba(0,0,0,0.12); }
+    .muted { @apply text-gray-500; }
+    .btn-primary { @apply text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg transition-all duration-200; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); }
+    .btn-primary:hover { filter: brightness(1.08); transform: translateY(-1px); box-shadow: 0 8px 25px -5px rgba(37, 99, 235, 0.4); }
+    .btn-run-now { @apply text-white px-6 py-3 rounded-xl font-semibold text-base shadow-lg transition-all duration-200; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); }
+    .btn-run-now:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-2px); box-shadow: 0 10px 30px -5px rgba(37, 99, 235, 0.45); }
+    .btn-run-now:disabled { cursor: not-allowed; }
+    .btn-ghost { @apply border-2 border-gray-200 text-gray-700 px-4 py-2 rounded-xl font-medium hover:bg-gray-50 hover:border-gray-300 transition-colors; }
   </style>
-
   {% block head %}{% endblock %}
 </head>
-<body class="bg-slate-900 text-slate-100 antialiased">
+<body class="bg-slate-50 antialiased text-gray-800">
 
-  <!-- NAV -->
-  <header class="border-b border-white/5 bg-gradient-to-b from-slate-900/95 to-slate-900/75 sticky top-0 z-40">
-    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-      <a href="/" class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-400 flex items-center justify-center font-bold text-white">H</div>
-        <div>
-          <div class="font-semibold">HEZI STOCK <span class="text-xs text-slate-400">v{{ version }}</span></div>
-          <div class="text-xs muted">AI-driven market insights</div>
-        </div>
+  <!-- Top header -->
+  <header class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-md">
+    <div class="flex items-center justify-between px-6 py-5">
+      <a href="{{ url_for('dashboard') }}" class="flex items-center gap-2 no-underline">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="HEZI STOCK — Inventory &amp; Stock Management" class="h-16 sm:h-20 w-auto object-contain" />
       </a>
-
-      <nav class="flex items-center gap-3">
-        <a href="/app" class="text-sm px-3 py-2 hover:bg-white/3 rounded-md">Dashboard</a>
-        <a href="/reports" class="text-sm px-3 py-2 hover:bg-white/3 rounded-md">Reports</a>
-        <a href="/settings" class="text-sm px-3 py-2 hover:bg-white/3 rounded-md">Settings</a>
-        <a href="/chart" class="text-sm px-3 py-2 hover:bg-white/3 rounded-md">Chart</a>
-        <a href="{{ url_for('dashboard') }}" class="ml-3 btn-primary">Run now</a>
-      </nav>
     </div>
   </header>
 
-  <!-- PAGE -->
-  <main class="max-w-6xl mx-auto px-4 py-8">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <div class="space-y-3 mb-5">
-          {% for category, message in messages %}
-            <div class="card border-l-4 p-4" style="border-left-color: rgba(74,158,255,0.9);">
-              <div class="font-semibold">{{ category|title }}</div>
-              <div class="muted text-sm">{{ message }}</div>
-            </div>
-          {% endfor %}
-        </div>
-      {% endif %}
-    {% endwith %}
+  <div class="flex">
+    <!-- Left sidebar -->
+    <aside class="w-56 min-h-[calc(100vh-65px)] bg-slate-700 border-r border-slate-600 flex-shrink-0">
+      <nav class="py-4 px-3 space-y-0.5">
+        <a href="{{ url_for('dashboard') }}" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium {{ 'active' if request.path == '/app' else 'text-slate-200' }}">
+          <span class="text-lg">▦</span> Dashboard
+        </a>
+        <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-200 hover:bg-slate-600">
+          <span class="text-lg">⇄</span> Transactions
+        </a>
+        <a href="{{ url_for('reports') }}" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium {{ 'active' if request.path == '/reports' else 'text-slate-200' }}">
+          <span class="text-lg">📄</span> Reports
+        </a>
+        <a href="{{ url_for('settings') }}" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium {{ 'active' if request.path == '/settings' else 'text-slate-200' }}">
+          <span class="text-lg">⚙</span> Settings
+        </a>
+      </nav>
+    </aside>
 
-    {% block content %}{% endblock %}
-  </main>
-
-  <footer class="border-t border-white/5 mt-10 py-6">
-    <div class="max-w-6xl mx-auto px-4 text-sm muted">HEZI STOCK — not investment advice. © {{ now().year if now is defined else "" }}</div>
-  </footer>
+    <!-- Main content -->
+    <main class="flex-1 p-8 overflow-auto">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="space-y-2 mb-4">
+            {% for category, message in messages %}
+              <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg text-sm">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
 
   {% block scripts %}{% endblock %}
 </body>

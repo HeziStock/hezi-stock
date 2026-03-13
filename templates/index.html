@@ -1,215 +1,198 @@
 {% extends "base.html" %}
 {% block title %}Dashboard — HEZI STOCK{% endblock %}
-
 {% block head %}
 <script>window.recListForModal = {{ (rec_list[:10] if rec_list is defined and rec_list else []) | tojson }};</script>
 {% endblock %}
-
 {% block content %}
-<!-- Hero action -->
-<div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-  <div class="col-span-2 card">
-    <div class="flex items-center justify-between">
-      <div>
-        <p class="text-sm muted">Your next trade idea is one click away</p>
-        <h1 class="text-2xl font-bold mt-1">Dashboard</h1>
-        <p class="muted text-sm mt-2">Run market scans, view recommendations & export CSV — all in one place.</p>
-      </div>
-      <div class="flex flex-col items-end gap-2">
-        <form method="post" action="{{ url_for('run_now') }}">
-          <button type="submit" class="btn-primary">🚀 Run market scan</button>
-        </form>
-        <div class="text-xs muted mt-1">
-          {% if last_report_time %} Last report: <strong>{{ last_report_time }}</strong> {% else %} No report yet {% endif %}
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <!-- Snapshot cards -->
-  <div class="card">
-    <div class="text-xs muted mb-2">Snapshot</div>
-    <div class="grid grid-cols-3 gap-2">
-      <div class="text-center">
-        <div class="text-sm muted">Gainers</div>
-        <div class="font-semibold text-lg">{{ insight.top_gainers|length if insight else 0 }}</div>
-      </div>
-      <div class="text-center">
-        <div class="text-sm muted">Losers</div>
-        <div class="font-semibold text-lg">{{ insight.top_losers|length if insight else 0 }}</div>
-      </div>
-      <div class="text-center">
-        <div class="text-sm muted">Recs</div>
-        <div class="font-semibold text-lg">{{ rec_list|length if rec_list else 0 }}</div>
-      </div>
+<!-- Run now + tagline -->
+<div class="card mb-6 bg-gradient-to-br from-white to-slate-50/80">
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <p class="text-sm text-slate-500">Your next trade idea is one click away — every day.</p>
+      <h1 class="text-2xl font-bold mt-1 text-slate-800">Dashboard</h1>
+      <p class="text-slate-500 text-sm mt-2">Run market scans, view top 10 recommendations & export CSV.</p>
+    </div>
+    <div class="flex flex-col items-end gap-2">
+      <form method="post" action="/run" id="run-form" class="inline">
+        <button type="submit" id="run-now-btn" class="btn-run-now">Run now — Update report & recommendations</button>
+      </form>
+      <p id="run-status" class="text-xs text-gray-500 mt-1 hidden"></p>
+      <p class="text-xs text-gray-500">
+        {% if last_report_time %}Last report: <strong>{{ last_report_time }}</strong>{% else %}No report yet{% endif %}
+      </p>
     </div>
   </div>
 </div>
 
 {% if insight %}
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-    <!-- Summary -->
-    <div class="card lg:col-span-1">
-      <h3 class="font-semibold">Latest summary</h3>
-      <p class="muted mt-2">{{ insight.summary or 'No summary available.' }}</p>
-      <div class="mt-4">
-        <a href="{{ url_for('export_recommendations_csv') }}" class="btn-ghost">Export recommendations (CSV)</a>
+  <!-- Summary -->
+  <div class="card mb-6 border-l-4 border-l-blue-500 bg-gradient-to-br from-white to-blue-50/30">
+    <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">Latest summary</h2>
+    <p class="text-slate-700 whitespace-pre-wrap leading-relaxed">{{ insight.summary or 'No summary.' }}</p>
+    <div class="mt-3">
+      <a href="{{ url_for('export_recommendations_csv') }}" class="btn-ghost text-sm">Export recommendations (CSV)</a>
+    </div>
+  </div>
+
+  {% if rec_list is defined and rec_list %}
+  <!-- Top 10 entry recommendations -->
+  <div class="card mb-6">
+    <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+      <h2 class="text-lg font-bold text-slate-800">Entry recommendations — up to 10 stocks (rating 10 = most recommended)</h2>
+      <div class="flex items-center gap-2 text-sm">
+        <label for="min-rating" class="text-gray-500">Show rating ≥</label>
+        <select id="min-rating" class="bg-gray-50 border border-gray-300 rounded-lg px-2 py-1.5 text-sm text-gray-800">
+          <option value="0">All (1–10)</option>
+          <option value="7">7+</option>
+          <option value="8">8+</option>
+          <option value="9">9+</option>
+          <option value="10">10 only</option>
+        </select>
       </div>
     </div>
-
-    <!-- Recommendations (main) -->
-    <div class="card lg:col-span-2">
-      <div class="flex items-center justify-between mb-3">
-        <h3 class="font-semibold text-lg">Entry recommendations</h3>
-        <div class="flex items-center gap-2 text-sm muted">
-          <label for="min-rating">Show rating ≥</label>
-          <select id="min-rating" class="bg-transparent border border-white/6 rounded px-2 py-1 text-sm">
-            <option value="0">All</option>
-            <option value="7">7+</option>
-            <option value="8">8+</option>
-            <option value="9">9+</option>
-            <option value="10">10</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- grid of rec cards -->
-      <div id="recs-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {% for rec in rec_list[:10] %}
-        <div class="p-4 rounded-lg border border-white/4 table-row-hover cursor-pointer" data-rating="{{ rec.rating or 0 }}" onclick="openModal({{ loop.index0 }})">
-          <div class="flex items-start gap-4">
-            <div class="flex-shrink-0">
-              <div class="w-12 h-12 rounded-md bg-gradient-to-br from-indigo-500 to-blue-400 flex items-center justify-center font-bold text-white">
-                {{ (rec.symbol or '')[:3] }}
-              </div>
+    <div id="recs-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {% for rec in rec_list[:10] %}
+      <div class="p-4 rounded-xl border border-slate-200 hover:border-blue-400 hover:shadow-md cursor-pointer transition-all duration-200 bg-white" data-rating="{{ rec.rating or 0 }}" onclick="openModal({{ loop.index0 }})">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center font-bold text-blue-700 shrink-0">{{ (rec.symbol or '')[:2] }}</div>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-2 flex-wrap">
+              <a href="https://finance.yahoo.com/quote/{{ rec.symbol }}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="font-semibold text-gray-800 hover:text-blue-600 underline">{{ rec.symbol }}</a>
+              <span class="text-gray-500 text-sm">{{ rec.name or '' }}</span>
+              {% if previous_symbols and rec.symbol and (rec.symbol|string|upper) not in previous_symbols %}
+              <span class="text-xs bg-amber-400 text-black px-2 py-0.5 rounded font-medium">NEW</span>
+              {% endif %}
             </div>
-            <div class="flex-1">
-              <div class="flex items-center gap-3">
-                <div class="text-lg font-semibold">{{ rec.symbol }}</div>
-                <div class="muted text-sm">{{ rec.name or '' }}</div>
-                {% if previous_symbols and rec.symbol and (rec.symbol|string|upper) not in previous_symbols %}
-                <div class="ml-auto text-xs bg-amber-400 text-black px-2 py-1 rounded">NEW</div>
-                {% endif %}
-              </div>
-              <p class="muted mt-1 text-sm line-clamp-2">{{ rec.reason }}</p>
-
-              <div class="mt-3 flex items-center gap-3">
-                <div class="rating-pill">{{ rec.rating|default('—') }}/10</div>
-                {% if rec.price is not none %}
-                <div class="text-sm font-semibold">${{ "%.2f"|format(rec.price) }}</div>
-                {% endif %}
-                {% if rec.change_pct is not none %}
-                  <div class="text-sm font-medium" style="color: {{ 'var(--gain)' if rec.change_pct >= 0 else 'var(--loss)' }};">
-                    {{ "%+.2f"|format(rec.change_pct) }}%
-                  </div>
-                {% endif %}
-              </div>
+            <p class="text-gray-500 text-sm mt-1 line-clamp-2">{{ rec.reason }}</p>
+            <div class="mt-2 flex items-center gap-3 flex-wrap">
+              <span class="inline-flex items-center gap-1 bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-sm font-semibold">{{ rec.rating|default('—') }}/10</span>
+              {% if rec.price is not none %}<span class="text-sm font-medium">${{ "%.2f"|format(rec.price) }}</span>{% endif %}
+              {% if rec.change_pct is not none %}
+              <span class="text-sm font-medium {{ 'text-green-600' if rec.change_pct >= 0 else 'text-red-600' }}">{{ "%+.2f"|format(rec.change_pct) }}%</span>
+              {% endif %}
             </div>
           </div>
         </div>
-        {% endfor %}
       </div>
-
-      <p class="muted text-sm mt-3">Based on momentum, volume & analyst data. Not investment advice.</p>
+      {% endfor %}
     </div>
+    <p class="text-gray-500 text-sm mt-3">Based on momentum, volume & analyst data. Not investment advice.</p>
   </div>
 
-  <!-- Gainers / Losers tables -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
-    <div class="card">
-      <h3 class="font-semibold mb-3">Top gainers</h3>
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead class="text-left text-xs muted"><tr><th>Symbol</th><th>Name</th><th>Price</th><th>Change</th></tr></thead>
-          <tbody>
-            {% for r in (insight.top_gainers or []) %}
-            <tr class="border-t border-white/4">
-              <td class="py-2">{{ r.symbol }}</td>
-              <td class="py-2 muted">{{ (r.name or '')[:30] }}</td>
-              <td class="py-2">${{ "%.2f"|format(r.price or 0) }}</td>
-              <td class="py-2" style="color: var(--gain)">+{{ "%.2f"|format(r.change_pct or 0) }}%</td>
-            </tr>
-            {% else %}
-            <tr><td colspan="4" class="py-4 muted">No gainers available.</td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3 class="font-semibold mb-3">Top losers</h3>
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead class="text-left text-xs muted"><tr><th>Symbol</th><th>Name</th><th>Price</th><th>Change</th></tr></thead>
-          <tbody>
-            {% for r in (insight.top_losers or []) %}
-            <tr class="border-t border-white/4">
-              <td class="py-2">{{ r.symbol }}</td>
-              <td class="py-2 muted">{{ (r.name or '')[:30] }}</td>
-              <td class="py-2">${{ "%.2f"|format(r.price or 0) }}</td>
-              <td class="py-2" style="color: var(--loss)">{{ "%.2f"|format(r.change_pct or 0) }}%</td>
-            </tr>
-            {% else %}
-            <tr><td colspan="4" class="py-4 muted">No losers available.</td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal (keeps original modal behavior) -->
-  <div id="rec-modal-overlay" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50">
-    <div class="bg-slate-900 border border-white/6 rounded-2xl max-w-2xl w-full p-6">
+  <!-- Modal for recommendation detail -->
+  <div id="rec-modal-overlay" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl border border-gray-200 max-w-2xl w-full p-6 shadow-xl">
       <div class="flex items-start justify-between gap-4">
         <div>
-          <h3 id="rec-modal-title" class="text-xl font-semibold">—</h3>
-          <div id="rec-modal-meta" class="muted text-sm mt-1">—</div>
+          <a id="rec-modal-title" href="#" target="_blank" rel="noopener noreferrer" class="text-xl font-semibold text-gray-800 hover:text-blue-600 underline">—</a>
+          <div id="rec-modal-meta" class="text-gray-500 text-sm mt-1">—</div>
         </div>
-        <button onclick="closeModal()" class="btn-ghost">Close</button>
+        <button type="button" onclick="closeModal()" class="btn-ghost">Close</button>
       </div>
-      <div id="rec-modal-global" class="mt-4 muted text-sm"></div>
-      <div id="rec-modal-take" class="mt-3"></div>
+      <div id="rec-modal-global" class="mt-4 text-gray-500 text-sm"></div>
+      <div id="rec-modal-take" class="mt-3 text-gray-700"></div>
     </div>
   </div>
+  {% endif %}
+
+  <!-- Gainers / Losers -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div class="card">
+      <h3 class="font-semibold text-gray-800 mb-3">Top gainers</h3>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="text-left text-gray-500 border-b border-gray-200">
+            <tr><th class="py-2 pr-2">Symbol</th><th class="py-2 pr-2">Name</th><th class="py-2 pr-2">Price</th><th class="py-2 pr-2">Change</th></tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            {% for r in (insight.top_gainers or [])[:15] %}
+            <tr class="hover:bg-gray-50">
+              <td class="py-2 pr-2 font-medium"><a href="https://finance.yahoo.com/quote/{{ r.symbol }}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">{{ r.symbol }}</a></td>
+              <td class="py-2 pr-2 text-gray-500">{{ (r.name or '')[:30] }}</td>
+              <td class="py-2 pr-2">${{ "%.2f"|format(r.price or 0) }}</td>
+              <td class="py-2 pr-2 text-green-600 font-medium">+{{ "%.2f"|format(r.change_pct or 0) }}%</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="py-4 text-gray-500">No gainers in this session. Run now to refresh.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <h3 class="font-semibold text-gray-800 mb-3">Top losers</h3>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="text-left text-gray-500 border-b border-gray-200">
+            <tr><th class="py-2 pr-2">Symbol</th><th class="py-2 pr-2">Name</th><th class="py-2 pr-2">Price</th><th class="py-2 pr-2">Change</th></tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            {% for r in (insight.top_losers or [])[:15] %}
+            <tr class="hover:bg-gray-50">
+              <td class="py-2 pr-2 font-medium"><a href="https://finance.yahoo.com/quote/{{ r.symbol }}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">{{ r.symbol }}</a></td>
+              <td class="py-2 pr-2 text-gray-500">{{ (r.name or '')[:30] }}</td>
+              <td class="py-2 pr-2">${{ "%.2f"|format(r.price or 0) }}</td>
+              <td class="py-2 pr-2 text-red-600 font-medium">{{ "%.2f"|format(r.change_pct or 0) }}%</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="py-4 text-gray-500">No losers in this session. Run now to refresh.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
 {% else %}
   <div class="card">
-    <h3 class="font-semibold">Run your first report</h3>
-    <p class="muted mt-2">Click <strong>Run market scan</strong> to fetch market movers and build your first insight report.</p>
+    <h3 class="font-semibold text-gray-800">Run your first report</h3>
+    <p class="text-gray-500 mt-2">Click <strong>Run now</strong> above to fetch market movers and build your first insight with up to 10 entry recommendations.</p>
   </div>
 {% endif %}
 
+{% endblock %}
+
 {% block scripts %}
 <script>
-  // modal helpers (uses window.recListForModal)
-  function openModal(i) {
-    var list = window.recListForModal || [];
-    var rec = list[i];
-    if (!rec) return;
-    document.getElementById('rec-modal-title').textContent = (rec.symbol || '') + ' — ' + (rec.name || '');
-    document.getElementById('rec-modal-meta').textContent = 'Rating: ' + (rec.rating || '—') + '/10 · ' + (rec.price ? ('$' + rec.price.toFixed(2)) : '—');
-    document.getElementById('rec-modal-global').textContent = rec.global_review || '';
-    document.getElementById('rec-modal-take').textContent = rec.why_enter_now || rec.reason || '';
-    document.getElementById('rec-modal-overlay').classList.remove('hidden');
-    document.getElementById('rec-modal-overlay').classList.add('flex');
-  }
-  function closeModal() {
-    document.getElementById('rec-modal-overlay').classList.add('hidden');
-    document.getElementById('rec-modal-overlay').classList.remove('flex');
-  }
-
-  // rating filter
-  (function() {
-    var sel = document.getElementById('min-rating');
-    if (!sel) return;
-    sel.addEventListener('change', function() {
-      var min = parseInt(sel.value || 0, 10);
-      document.querySelectorAll('#recs-grid > div').forEach(function(card) {
-        var r = parseInt(card.getAttribute('data-rating')||0,10);
-        card.style.display = (min === 0 || r >= min) ? '' : 'none';
-      });
+(function() {
+  var form = document.getElementById('run-form');
+  var btn = document.getElementById('run-now-btn');
+  var status = document.getElementById('run-status');
+  if (form && btn) {
+    form.addEventListener('submit', function() {
+      if (btn) { btn.disabled = true; btn.classList.add('opacity-75', 'cursor-not-allowed'); }
+      if (status) { status.textContent = 'Updating…'; status.classList.remove('hidden'); }
     });
-  })();
+  }
+})();
+function openModal(i) {
+  var list = window.recListForModal || [];
+  var rec = list[i];
+  if (!rec) return;
+  var titleEl = document.getElementById('rec-modal-title');
+    titleEl.textContent = (rec.symbol || '') + ' — ' + (rec.name || '');
+    titleEl.href = rec.symbol ? ('https://finance.yahoo.com/quote/' + encodeURIComponent(rec.symbol)) : '#';
+  document.getElementById('rec-modal-meta').textContent = 'Rating: ' + (rec.rating || '—') + '/10 · ' + (rec.price ? ('$' + rec.price.toFixed(2)) : '—');
+  document.getElementById('rec-modal-global').textContent = rec.global_review || '';
+  document.getElementById('rec-modal-take').textContent = rec.why_enter_now || rec.reason || '';
+  var el = document.getElementById('rec-modal-overlay');
+  if (el) { el.classList.remove('hidden'); el.classList.add('flex'); }
+}
+function closeModal() {
+  var el = document.getElementById('rec-modal-overlay');
+  if (el) { el.classList.add('hidden'); el.classList.remove('flex'); }
+}
+(function() {
+  var sel = document.getElementById('min-rating');
+  if (!sel) return;
+  sel.addEventListener('change', function() {
+    var min = parseInt(sel.value || 0, 10);
+    document.querySelectorAll('#recs-grid > div').forEach(function(card) {
+      var r = parseInt(card.getAttribute('data-rating') || 0, 10);
+      card.style.display = (min === 0 || r >= min) ? '' : 'none';
+    });
+  });
+})();
 </script>
 {% endblock %}

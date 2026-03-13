@@ -8,7 +8,7 @@ from pathlib import Path
 # Ensure project root is on path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from stock_fetcher import load_config, fetch_prices, fetch_market_movers
+from stock_fetcher import load_config, fetch_prices, fetch_market_movers, fetch_extended_movers
 from report_generator import (
     append_to_history,
     build_insights,
@@ -40,9 +40,9 @@ def main():
 
     if use_market_movers:
         # Real market movers: what to consider entering (gainers) vs exiting (losers)
-        print("Fetching market movers (day gainers & losers)...")
-        gainers, losers = fetch_market_movers()
-        if not gainers and not losers:
+        print("Fetching market movers (gainers, losers, most active — 40+ candidates)...")
+        gainers, losers, entry_candidates = fetch_extended_movers()
+        if not gainers and not losers and not entry_candidates:
             msg = "Market movers run failed: no data received."
             print(msg)
             if do_notify:
@@ -50,7 +50,7 @@ def main():
             return 1
         df = movers_to_dataframe(gainers, losers)
         append_to_history(df)
-        recommendation = research_and_recommend(gainers)
+        recommendation = research_and_recommend(entry_candidates, max_candidates=50)
         insights = build_insights_from_movers(gainers, losers, recommendation=recommendation)
     else:
         # Fixed symbol list (legacy)

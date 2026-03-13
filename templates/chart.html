@@ -4,21 +4,21 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 {% endblock %}
 {% block content %}
-<h1>Price history (from reports)</h1>
-<p class="muted">Select a symbol to see the last 10 days of price and change % from your saved history. Data comes from <code>reports/history_*.csv</code>.</p>
-<div class="card" style="margin-bottom: 1rem;">
-  <label for="chart-symbol">Symbol</label>
-  <select id="chart-symbol" style="max-width: 12rem; padding: 0.5rem; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-size: 1rem;">
+<h1 class="text-2xl font-bold mb-2">Price history (from reports)</h1>
+<p class="muted mb-4">Select a symbol to see the last 10 days of price and change % from your saved history. Data comes from <code class="bg-gray-100 px-1.5 py-0.5 rounded text-gray-700">reports/history_*.csv</code>.</p>
+<div class="card mb-4">
+  <label for="chart-symbol" class="block text-sm font-medium mb-2">Symbol</label>
+  <select id="chart-symbol" class="w-full max-w-xs bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
     <option value="">— Select —</option>
     {% for s in symbols %}
     <option value="{{ s }}">{{ s }}</option>
     {% endfor %}
   </select>
-  <p class="muted" style="margin-top: 0.5rem;">Symbols from your latest report. Add more by running "Run now" with market movers.</p>
+  <p class="muted text-sm mt-2">Symbols from your latest report. Add more by running a market scan.</p>
 </div>
-<div class="card" style="padding: 1.5rem;">
+<div class="card p-6">
   <canvas id="chart-canvas" height="280"></canvas>
-  <p id="chart-no-data" class="muted" style="display: none; margin-top: 1rem;">No history data for this symbol. Run "Run now" to build history.</p>
+  <p id="chart-no-data" class="muted text-sm mt-4 hidden">No history data for this symbol. Run a market scan to build history.</p>
 </div>
 <script>
 (function() {
@@ -32,7 +32,7 @@
     if (!symbol) {
       if (chart) chart.destroy();
       chart = null;
-      noDataEl.style.display = 'none';
+      noDataEl.classList.add('hidden');
       return;
     }
     fetch('/api/chart/' + encodeURIComponent(symbol) + '?days=10')
@@ -41,20 +41,20 @@
         if (!data.ok || !data.dates || data.dates.length === 0) {
           if (chart) chart.destroy();
           chart = null;
-          noDataEl.style.display = 'block';
+          noDataEl.classList.remove('hidden');
           return;
         }
-        noDataEl.style.display = 'none';
+        noDataEl.classList.add('hidden');
         var labels = data.dates.map(function(d) { return d.slice(0, 10); });
         if (chart) chart.destroy();
-        var gain = getComputedStyle(document.documentElement).getPropertyValue('--gain').trim() || '#22c55e';
-        var textSoft = getComputedStyle(document.documentElement).getPropertyValue('--text-soft').trim() || '#9aa0a6';
+        var gain = '#22c55e';
+        var textSoft = '#9aa6b2';
         chart = new Chart(ctx, {
           type: 'line',
           data: {
             labels: labels,
             datasets: [
-              { label: 'Price', data: data.prices, borderColor: '#4a9eff', backgroundColor: 'rgba(74, 158, 255, 0.1)', fill: true, yAxisID: 'y' },
+              { label: 'Price', data: data.prices, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, yAxisID: 'y' },
               { label: 'Change %', data: data.changes, borderColor: gain, borderDash: [4,2], yAxisID: 'y1' }
             ]
           },
@@ -73,7 +73,7 @@
       .catch(function() {
         if (chart) chart.destroy();
         chart = null;
-        noDataEl.style.display = 'block';
+        noDataEl.classList.remove('hidden');
       });
   });
 })();
