@@ -1,12 +1,30 @@
 @echo off
 cd /d "%~dp0"
-echo HEZI STOCK - Starting portal...
-python -c "import sys; print('Python:', sys.executable)" 2>nul || (echo Error: Python not found. Install Python. & pause & exit /b 1)
+title HEZI STOCK Portal
 echo.
-start "HEZI STOCK Server" python app.py
+echo ============================================
+echo   HEZI STOCK - Starting portal...
+echo ============================================
+echo.
+
+where python >nul 2>nul
+if errorlevel 1 (
+    echo [ERROR] Python not found. Add Python to PATH or run from Anaconda prompt.
+    echo.
+    pause
+    exit /b 1
+)
+
+echo Python: 
+python -c "import sys; print('  ', sys.executable)"
+echo.
+echo Opening browser in 3 seconds. Keep this window open.
+echo Dashboard: http://127.0.0.1:5000/app
+echo.
+start "" http://127.0.0.1:5000/app
 timeout /t 3 /nobreak >nul
-start http://127.0.0.1:5000/app
+
+python app.py
 echo.
-echo Browser opened. Server runs in the "HEZI STOCK Server" window - do not close it.
-echo To stop the site, close that window.
+echo Server stopped. If you see an error above, fix it and run again.
 pause

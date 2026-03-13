@@ -5,20 +5,20 @@
 {% endblock %}
 {% block content %}
 
-<!-- Run now + tagline -->
-<div class="card mb-6 bg-gradient-to-br from-white to-slate-50/80">
+<!-- Run now + tagline (v0 design) -->
+<div class="card v0-card mb-6 p-6">
   <div class="flex flex-wrap items-center justify-between gap-4">
     <div>
-      <p class="text-sm text-slate-500">Your next trade idea is one click away — every day.</p>
-      <h1 class="text-2xl font-bold mt-1 text-slate-800">Dashboard</h1>
-      <p class="text-slate-500 text-sm mt-2">Get the <strong>10 stocks most worth entering right now</strong> — from today's market scan. Export CSV.</p>
+      <p class="text-sm v0-card-muted">Your next trade idea is one click away — every day.</p>
+      <h1 class="text-2xl font-bold mt-1">Dashboard</h1>
+      <p class="v0-card-muted text-sm mt-2">Get the <strong class="text-[var(--v0-foreground)]">10 stocks most worth entering right now</strong> — from today's market scan. Export CSV.</p>
     </div>
     <div class="flex flex-col items-end gap-2">
       <form method="post" action="/run" id="run-form" class="inline">
         <button type="submit" id="run-now-btn" class="btn-run-now">Run now — Get my 10 best entry ideas</button>
       </form>
-      <p id="run-status" class="text-xs text-gray-500 mt-1 hidden"></p>
-      <p class="text-xs text-gray-500">
+      <p id="run-status" class="text-xs v0-card-muted mt-1 hidden"></p>
+      <p class="text-xs v0-card-muted">
         {% if last_report_time %}Last report: <strong>{{ last_report_time }}</strong>{% else %}No report yet{% endif %}
       </p>
     </div>
@@ -26,26 +26,26 @@
 </div>
 
 {% if insight %}
-  <!-- Summary -->
-  <div class="card mb-6 border-l-4 border-l-blue-500 bg-gradient-to-br from-white to-blue-50/30">
-    <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">Latest summary</h2>
-    <p class="text-slate-700 whitespace-pre-wrap leading-relaxed">{{ insight.summary or 'No summary.' }}</p>
+  <!-- Summary (v0 design) -->
+  <div class="card v0-card mb-6 p-6 border-l-4 border-l-[var(--v0-primary)]">
+    <h2 class="text-sm font-semibold v0-card-muted uppercase tracking-wide mb-2">Latest summary</h2>
+    <p class="whitespace-pre-wrap leading-relaxed">{{ insight.summary or 'No summary.' }}</p>
     <div class="mt-3">
       <a href="{{ url_for('export_recommendations_csv') }}" class="btn-ghost text-sm">Export recommendations (CSV)</a>
     </div>
   </div>
 
   {% if rec_list is defined and rec_list %}
-  <!-- Top 10 entry recommendations -->
-  <div class="card mb-6">
+  <!-- Top 10 (v0 design) -->
+  <div class="card v0-card mb-6 p-6">
     <div class="flex items-start justify-between gap-4 mb-3 flex-wrap">
       <div>
-        <h2 class="text-lg font-bold text-slate-800">The 10 stocks most worth entering right now</h2>
-        <p class="text-slate-500 text-sm mt-1">From today's market scan, ranked by momentum, volume &amp; analyst view. #1 = strongest pick.</p>
+        <h2 class="text-lg font-bold">The 10 stocks most worth entering right now</h2>
+        <p class="v0-card-muted text-sm mt-1">From today's market scan, ranked by momentum, volume &amp; analyst view. #1 = strongest pick.</p>
       </div>
       <div class="flex items-center gap-2 text-sm shrink-0">
-        <label for="min-rating" class="text-gray-500">Show rating ≥</label>
-        <select id="min-rating" class="bg-gray-50 border border-gray-300 rounded-lg px-2 py-1.5 text-sm text-gray-800">
+        <label for="min-rating" class="v0-card-muted">Show rating ≥</label>
+        <select id="min-rating" class="px-2 py-1.5 text-sm rounded-md">
           <option value="0">All (1–10)</option>
           <option value="7">7+</option>
           <option value="8">8+</option>
@@ -56,23 +56,23 @@
     </div>
     <div id="recs-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
       {% for rec in rec_list[:10] %}
-      <div class="p-4 rounded-xl border border-slate-200 hover:border-blue-400 hover:shadow-md cursor-pointer transition-all duration-200 bg-white" data-rating="{{ rec.rating or 0 }}" onclick="openModal({{ loop.index0 }})">
+      <div class="rec-tile p-4 rounded-xl cursor-pointer transition-all duration-200" data-rating="{{ rec.rating or 0 }}" onclick="openModal({{ loop.index0 }})">
         <div class="flex items-start gap-3">
-          <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center font-bold text-blue-700 shrink-0">{{ (rec.symbol or '')[:2] }}</div>
+          <div class="w-10 h-10 rounded-lg flex items-center justify-center font-bold shrink-0 text-[var(--v0-primary-foreground)]" style="background: var(--v0-primary);">{{ (rec.symbol or '')[:2] }}</div>
           <div class="min-w-0 flex-1">
             <div class="flex items-center gap-2 flex-wrap">
-              <a href="https://finance.yahoo.com/quote/{{ rec.symbol }}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="font-semibold text-gray-800 hover:text-blue-600 underline">{{ rec.symbol }}</a>
-              <span class="text-gray-500 text-sm">{{ rec.name or '' }}</span>
+              <a href="https://finance.yahoo.com/quote/{{ rec.symbol }}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="font-semibold no-v0">{{ rec.symbol }}</a>
+              <span class="v0-card-muted text-sm">{{ rec.name or '' }}</span>
               {% if previous_symbols and rec.symbol and (rec.symbol|string|upper) not in previous_symbols %}
-              <span class="text-xs bg-amber-400 text-black px-2 py-0.5 rounded font-medium">NEW</span>
+              <span class="text-xs px-2 py-0.5 rounded font-medium text-[var(--v0-primary-foreground)]" style="background: var(--v0-primary);">NEW</span>
               {% endif %}
             </div>
-            <p class="text-gray-500 text-sm mt-1 line-clamp-2">{{ rec.reason }}</p>
+            <p class="v0-card-muted text-sm mt-1 line-clamp-2">{{ rec.reason }}</p>
             <div class="mt-2 flex items-center gap-3 flex-wrap">
-              <span class="inline-flex items-center gap-1 bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-sm font-semibold">{{ rec.rating|default('—') }}/10</span>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-sm font-semibold {% if (rec.rating or 0) >= 9 %}rating-strong-buy{% elif (rec.rating or 0) >= 7 %}rating-buy{% elif (rec.rating or 0) >= 5 %}rating-hold{% else %}rating-sell{% endif %}">{{ rec.rating|default('—') }}/10</span>
               {% if rec.price is not none %}<span class="text-sm font-medium">${{ "%.2f"|format(rec.price) }}</span>{% endif %}
               {% if rec.change_pct is not none %}
-              <span class="text-sm font-medium {{ 'text-green-600' if rec.change_pct >= 0 else 'text-red-600' }}">{{ "%+.2f"|format(rec.change_pct) }}%</span>
+              <span class="text-sm font-medium {{ 'text-positive' if rec.change_pct >= 0 else 'text-negative' }}">{{ "%+.2f"|format(rec.change_pct) }}%</span>
               {% endif %}
             </div>
           </div>
@@ -80,71 +80,71 @@
       </div>
       {% endfor %}
     </div>
-    <p class="text-gray-500 text-sm mt-3">Rating 10 = strongest “enter now” signal. Based on today's data. Not investment advice.</p>
+    <p class="v0-card-muted text-sm mt-3">Rating 10 = strongest “enter now” signal. Based on today's data. Not investment advice.</p>
   </div>
 
-  <!-- Modal for recommendation detail -->
+  <!-- Modal (v0 design) -->
   <div id="rec-modal-overlay" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl border border-gray-200 max-w-2xl w-full p-6 shadow-xl">
+    <div class="modal-content rounded-2xl max-w-2xl w-full p-6 shadow-xl">
       <div class="flex items-start justify-between gap-4">
         <div>
-          <a id="rec-modal-title" href="#" target="_blank" rel="noopener noreferrer" class="text-xl font-semibold text-gray-800 hover:text-blue-600 underline">—</a>
-          <div id="rec-modal-meta" class="text-gray-500 text-sm mt-1">—</div>
+          <a id="rec-modal-title" href="#" target="_blank" rel="noopener noreferrer" class="text-xl font-semibold no-v0">—</a>
+          <div id="rec-modal-meta" class="v0-card-muted text-sm mt-1">—</div>
         </div>
         <button type="button" onclick="closeModal()" class="btn-ghost">Close</button>
       </div>
-      <div id="rec-modal-global" class="mt-4 text-gray-500 text-sm"></div>
-      <div id="rec-modal-take" class="mt-3 text-gray-700"></div>
+      <div id="rec-modal-global" class="mt-4 v0-card-muted text-sm"></div>
+      <div id="rec-modal-take" class="mt-3"></div>
     </div>
   </div>
   {% else %}
-  <!-- No recommendations (e.g. ran with fixed symbols only) -->
-  <div class="card mb-6 border border-amber-200 bg-amber-50/50">
-    <p class="text-amber-800 text-sm"><strong>Top 10 recommendations</strong> come from a market scan (gainers &amp; most active), not from your saved symbol list. Turn on <strong>Use market movers</strong> in <a href="{{ url_for('settings') }}" class="underline">Settings</a> and run again to get AI-ranked entry ideas.</p>
+  <!-- No recommendations -->
+  <div class="card v0-card mb-6 p-6 border-l-4 border-l-[var(--v0-yellow)]">
+    <p class="v0-card-muted text-sm"><strong>Top 10 recommendations</strong> come from a market scan (gainers &amp; most active), not from your saved symbol list. Turn on <strong>Use market movers</strong> in <a href="{{ url_for('settings') }}" class="underline">Settings</a> and run again to get AI-ranked entry ideas.</p>
   </div>
   {% endif %}
 
-  <!-- Gainers / Losers -->
+  <!-- Gainers / Losers (v0 design) -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-    <div class="card">
-      <h3 class="font-semibold text-gray-800 mb-3">Top gainers</h3>
+    <div class="card v0-card p-6">
+      <h3 class="font-semibold mb-3">Top gainers</h3>
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
-          <thead class="text-left text-gray-500 border-b border-gray-200">
+          <thead class="text-left v0-card-muted border-b border-[var(--v0-border)]">
             <tr><th class="py-2 pr-2">Symbol</th><th class="py-2 pr-2">Name</th><th class="py-2 pr-2">Price</th><th class="py-2 pr-2">Change</th></tr>
           </thead>
-          <tbody class="divide-y divide-gray-100">
+          <tbody class="divide-y divide-[var(--v0-border)]">
             {% for r in (insight.top_gainers or [])[:15] %}
-            <tr class="hover:bg-gray-50">
-              <td class="py-2 pr-2 font-medium"><a href="https://finance.yahoo.com/quote/{{ r.symbol }}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">{{ r.symbol }}</a></td>
-              <td class="py-2 pr-2 text-gray-500">{{ (r.name or '')[:30] }}</td>
+            <tr class="hover:bg-[var(--v0-secondary)]">
+              <td class="py-2 pr-2 font-medium"><a href="https://finance.yahoo.com/quote/{{ r.symbol }}" target="_blank" rel="noopener noreferrer" class="no-v0">{{ r.symbol }}</a></td>
+              <td class="py-2 pr-2 v0-card-muted">{{ (r.name or '')[:30] }}</td>
               <td class="py-2 pr-2">${{ "%.2f"|format(r.price or 0) }}</td>
-              <td class="py-2 pr-2 text-green-600 font-medium">+{{ "%.2f"|format(r.change_pct or 0) }}%</td>
+              <td class="py-2 pr-2 text-positive font-medium">+{{ "%.2f"|format(r.change_pct or 0) }}%</td>
             </tr>
             {% else %}
-            <tr><td colspan="4" class="py-4 text-gray-500">No gainers in this session. Run now to refresh.</td></tr>
+            <tr><td colspan="4" class="py-4 v0-card-muted">No gainers in this session. Run now to refresh.</td></tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
     </div>
-    <div class="card">
-      <h3 class="font-semibold text-gray-800 mb-3">Top losers</h3>
+    <div class="card v0-card p-6">
+      <h3 class="font-semibold mb-3">Top losers</h3>
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
-          <thead class="text-left text-gray-500 border-b border-gray-200">
+          <thead class="text-left v0-card-muted border-b border-[var(--v0-border)]">
             <tr><th class="py-2 pr-2">Symbol</th><th class="py-2 pr-2">Name</th><th class="py-2 pr-2">Price</th><th class="py-2 pr-2">Change</th></tr>
           </thead>
-          <tbody class="divide-y divide-gray-100">
+          <tbody class="divide-y divide-[var(--v0-border)]">
             {% for r in (insight.top_losers or [])[:15] %}
-            <tr class="hover:bg-gray-50">
-              <td class="py-2 pr-2 font-medium"><a href="https://finance.yahoo.com/quote/{{ r.symbol }}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">{{ r.symbol }}</a></td>
-              <td class="py-2 pr-2 text-gray-500">{{ (r.name or '')[:30] }}</td>
+            <tr class="hover:bg-[var(--v0-secondary)]">
+              <td class="py-2 pr-2 font-medium"><a href="https://finance.yahoo.com/quote/{{ r.symbol }}" target="_blank" rel="noopener noreferrer" class="no-v0">{{ r.symbol }}</a></td>
+              <td class="py-2 pr-2 v0-card-muted">{{ (r.name or '')[:30] }}</td>
               <td class="py-2 pr-2">${{ "%.2f"|format(r.price or 0) }}</td>
-              <td class="py-2 pr-2 text-red-600 font-medium">{{ "%.2f"|format(r.change_pct or 0) }}%</td>
+              <td class="py-2 pr-2 text-negative font-medium">{{ "%.2f"|format(r.change_pct or 0) }}%</td>
             </tr>
             {% else %}
-            <tr><td colspan="4" class="py-4 text-gray-500">No losers in this session. Run now to refresh.</td></tr>
+            <tr><td colspan="4" class="py-4 v0-card-muted">No losers in this session. Run now to refresh.</td></tr>
             {% endfor %}
           </tbody>
         </table>
@@ -153,9 +153,9 @@
   </div>
 
 {% else %}
-  <div class="card">
-    <h3 class="font-semibold text-gray-800">Get the 10 stocks most worth entering right now</h3>
-    <p class="text-gray-500 mt-2">Click <strong>Run now</strong> above. The system will scan the market and show you the 10 best entry ideas, ranked.</p>
+  <div class="card v0-card p-6">
+    <h3 class="font-semibold">Get the 10 stocks most worth entering right now</h3>
+    <p class="v0-card-muted mt-2">Click <strong>Run now</strong> above. The system will scan the market and show you the 10 best entry ideas, ranked.</p>
   </div>
 {% endif %}
 
