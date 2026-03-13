@@ -202,7 +202,11 @@ def run_fetch():
                 return
             df = movers_to_dataframe(gainers, losers)
             append_to_history(df)
-            recommendation = research_and_recommend(entry_candidates, max_candidates=50)
+            recommendation = research_and_recommend(
+                entry_candidates,
+                max_candidates=50,
+                exclude_symbols=cfg.get("exclude_from_recommendations") or [],
+            )
             insights = build_insights_from_movers(gainers, losers, recommendation=recommendation)
         else:
             symbols = cfg.get("symbols") or []
@@ -346,6 +350,13 @@ def settings():
             cfg = load_cfg()
             cfg["symbols"] = symbols
             cfg["use_market_movers"] = use_movers
+            raw_exclude = request.form.get("exclude_from_recommendations", "").strip()
+            exclude_list = []
+            for part in raw_exclude.replace(",", " ").split():
+                s = part.strip().upper()
+                if s and s not in exclude_list:
+                    exclude_list.append(s)
+            cfg["exclude_from_recommendations"] = exclude_list
             cfg.setdefault("schedule", {})["morning_time"] = request.form.get("morning_time", "09:00").strip() or "09:00"
             cfg.setdefault("schedule", {})["evening_time"] = request.form.get("evening_time", "18:00").strip() or "18:00"
             cfg.setdefault("notifications", {})["desktop"] = request.form.get("notify_desktop") == "on"
@@ -424,6 +435,22 @@ def api_latest():
     if insight is None:
         return jsonify({"ok": False, "insight": None})
     return jsonify({"ok": True, "insight": insight})
+
+
+@app.route("/api/recommendations")
+def api_recommendations():
+    """JSON: the 10 stocks most worth entering now (from latest scan). For v0 dashboard / external clients."""
+    insight = get_latest_insight()
+    rec_list = _normalize_rec_list(insight) if insight else []
+    generated_at = (insight or {}).get("generated_at")
+    resp = jsonify({
+        "ok": True,
+        "recommendations": rec_list,
+        "generated_at": generated_at,
+        "message": "10 stocks most worth entering now from latest market scan." if rec_list else "No scan yet. Run scan in HEZI STOCK portal.",
+    })
+    resp.headers["Access-Control-Allow-Origin"] = "*"
+    return resp
 
 
 @app.route("/api/export/recommendations.csv")

@@ -50,7 +50,11 @@ def main():
             return 1
         df = movers_to_dataframe(gainers, losers)
         append_to_history(df)
-        recommendation = research_and_recommend(entry_candidates, max_candidates=50)
+        recommendation = research_and_recommend(
+            entry_candidates,
+            max_candidates=50,
+            exclude_symbols=config.get("exclude_from_recommendations") or [],
+        )
         insights = build_insights_from_movers(gainers, losers, recommendation=recommendation)
     else:
         # Fixed symbol list (legacy)

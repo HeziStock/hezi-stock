@@ -1,5 +1,6 @@
 {
   "use_market_movers": true,
+  "exclude_from_recommendations": ["NVDA"],
   "schedule": {
     "morning_time": "09:00",
     "evening_time": "18:00",

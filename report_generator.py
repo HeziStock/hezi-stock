@@ -98,7 +98,7 @@ def build_insights_from_movers(gainers: list[dict], losers: list[dict], top_n: i
         f"• Market movers: {len(gainers or [])} gainers, {len(losers or [])} losers",
     ]
     if rec_list:
-        lines.append("• Entry recommendations (rating 1–10):")
+        lines.append("• 10 stocks most worth entering now (rating 1–10):")
         for r in rec_list[:10]:
             lines.append(f"  · {r.get('symbol', '—')} ({r.get('rating', '?')}/10)")
     lines.append(f"• Consider entering (top gainer): {g1.get('symbol', '—')} ({g_str})")
@@ -131,7 +131,7 @@ def write_insight_report(insights: dict) -> Path:
         if isinstance(rec_list, dict):
             rec_list = [rec_list] if rec_list.get("symbol") else []
         if rec_list:
-            f.write("--- TOP 5 ENTRY RECOMMENDATIONS (research-based, 10 = most recommended) ---\n\n")
+            f.write("--- 10 STOCKS MOST WORTH ENTERING NOW (rating 10 = strongest pick) ---\n\n")
             for i, rec in enumerate(rec_list[:10], 1):
                 f.write(f"{i}. {rec.get('symbol')} — {rec.get('name', '')}  |  Rating: {rec.get('rating', '?')}/10\n")
                 f.write(f"   Reason: {rec.get('reason', '')}\n")

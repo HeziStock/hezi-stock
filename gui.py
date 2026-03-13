@@ -309,7 +309,11 @@ class StockTrackerApp:
                 if use_market_movers:
                     gainers, losers, entry_candidates = fetch_extended_movers()
                     df = movers_to_dataframe(gainers, losers)
-                    recommendation = research_and_recommend(entry_candidates, max_candidates=50)
+                    recommendation = research_and_recommend(
+                        entry_candidates,
+                        max_candidates=50,
+                        exclude_symbols=cfg.get("exclude_from_recommendations") or [],
+                    )
                     insights = build_insights_from_movers(gainers, losers, recommendation=recommendation)
                 else:
                     symbols = cfg.get("symbols") or []

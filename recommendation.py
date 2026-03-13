@@ -121,18 +121,25 @@ def _build_global_review(info: dict, news_headlines: list[str], change_pct: floa
     return " ".join(lines) if lines else "Data from Yahoo Finance. Check your broker for full research."
 
 
-def research_and_recommend(gainers: list[dict], max_candidates: int = TOP_CANDIDATES, min_count: int = MIN_RECOMMENDATIONS) -> list[dict]:
+def research_and_recommend(
+    gainers: list[dict],
+    max_candidates: int = TOP_CANDIDATES,
+    min_count: int = MIN_RECOMMENDATIONS,
+    exclude_symbols: list[str] | None = None,
+) -> list[dict]:
     """
     Research top gainers and return at least 5 entry recommendations.
     Each dict: symbol, name, price, change_pct, reason, why_enter_now, rating (1–10), volume_ratio, analyst_label, market_cap_b.
+    exclude_symbols: symbols to never recommend (e.g. ["NVDA"] to hide from Top 10).
     """
     if not gainers:
         return []
-    candidates = gainers[:max_candidates]
+    excluded = {str(s).strip().upper() for s in (exclude_symbols or []) if s}
+    candidates = [g for g in gainers[:max_candidates] if (g.get("symbol") or "").upper() not in excluded]
     scored = []
     for g in candidates:
         sym = g.get("symbol")
-        if not sym:
+        if not sym or (excluded and str(sym).upper() in excluded):
             continue
         try:
             t = yf.Ticker(sym)

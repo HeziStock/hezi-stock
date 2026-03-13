@@ -18,6 +18,11 @@
     <textarea name="symbols" placeholder="AAPL&#10;MSFT&#10;GOOGL" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-800 min-h-[120px] focus:outline-none focus:ring-2 focus:ring-blue-500">{{ (config.get('symbols') or []) | join('\n') }}</textarea>
   </div>
   <div class="card mb-4">
+    <h3 class="font-semibold mb-2">Hide from Top 10 recommendations</h3>
+    <p class="muted text-sm mb-2">Symbols listed here will never appear in the Top 10 (e.g. NVDA if you don’t want to see it). Comma or newline separated.</p>
+    <textarea name="exclude_from_recommendations" placeholder="NVDA&#10;TSLA" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-800 min-h-[60px] focus:outline-none focus:ring-2 focus:ring-blue-500">{{ (config.get('exclude_from_recommendations') or []) | join('\n') }}</textarea>
+  </div>
+  <div class="card mb-4">
     <h3 class="font-semibold mb-2">Schedule</h3>
     <p class="muted text-sm mb-3">Used by Task Scheduler and <code class="bg-gray-100 px-1 rounded text-gray-700">run_scheduler.py</code> for morning and evening runs.</p>
     <label class="block text-sm mb-1">Morning time</label>
