@@ -41,7 +41,7 @@
   <form method="post" action="{{ url_for('run_now') }}" class="run-form" id="run-form">
     <button type="submit" class="btn btn-run" id="run-btn" aria-label="Run now to update report and recommendations">▶ Run now — Update report & recommendations</button>
   </form>
-  <p class="action-hint">Click to update. The page will refresh automatically when the report is ready. <kbd>Ctrl+Enter</kbd> runs now. If nothing happens, the server may be starting (e.g. on free hosting) — wait ~30s and try again.</p>
+  <p class="action-hint">Click <strong>Run now</strong> three times to update. The page will refresh automatically when the report is ready. If nothing happens, the server may be starting (e.g. on free hosting) — wait ~30s and try again.</p>
   <p class="run-status" id="run-status" aria-live="polite"></p>
   {% if last_report_time %}
   <p class="muted" style="margin: 0.35rem 0 0 0; font-size: 0.85rem;">Last report: <strong>{{ last_report_time }}</strong></p>
@@ -59,29 +59,50 @@
   var statusEl = document.getElementById('run-status');
   var loadingBar = document.getElementById('loading-bar');
   var runBtn = document.getElementById('run-btn');
+  var runClickCount = 0;
+  var REQUIRED_CLICKS = 3;
   if (!form || !statusEl) return;
-  document.addEventListener('keydown', function(e) {
-    if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); form.requestSubmit(); }
-  });
-  form.addEventListener('submit', function() {
+  if (runBtn) {
+    runBtn.addEventListener('click', function() {
+      runClickCount++;
+    });
+  }
+  form.addEventListener('submit', function(e) {
+    if (runClickCount < REQUIRED_CLICKS) {
+      e.preventDefault();
+      statusEl.style.display = 'block';
+      statusEl.innerHTML = '<span style="color: var(--text-soft);">Click Run now <strong>' + runClickCount + '</strong> of <strong>' + REQUIRED_CLICKS + '</strong>. Click ' + (REQUIRED_CLICKS - runClickCount) + ' more time(s) to start.</span>';
+      return;
+    }
     statusEl.textContent = '';
     statusEl.innerHTML = '<span class="status-in-progress">● IN PROGRESS</span> — Sending request…';
     statusEl.style.display = 'block';
     if (loadingBar) loadingBar.style.display = 'flex';
     if (runBtn) { runBtn.disabled = true; runBtn.style.opacity = '0.7'; }
-    var submittedAt = Date.now();
     var timeoutMs = 18000;
-    var t = window.setTimeout(function() {
+    window.setTimeout(function() {
       if (runBtn && runBtn.disabled) {
         var stillHere = !window.location.search.includes('run_started');
         if (stillHere) {
           runBtn.disabled = false;
           runBtn.style.opacity = '1';
-          statusEl.innerHTML = '<span style="color: var(--text-soft);">Request is taking longer than usual (server may be starting). You can try <strong>Run now</strong> again.</span>';
+          runClickCount = 0;
+          statusEl.innerHTML = '<span style="color: var(--text-soft);">Request is taking longer than usual (server may be starting). You can try <strong>Run now</strong> again (3 clicks).</span>';
           statusEl.style.display = 'block';
         }
       }
     }, timeoutMs);
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.key === 'Enter') {
+      e.preventDefault();
+      runClickCount++;
+      if (runClickCount >= REQUIRED_CLICKS) form.requestSubmit();
+      else {
+        statusEl.style.display = 'block';
+        statusEl.innerHTML = '<span style="color: var(--text-soft);">Click Run now <strong>' + runClickCount + '</strong> of <strong>' + REQUIRED_CLICKS + '</strong>. Press Ctrl+Enter ' + (REQUIRED_CLICKS - runClickCount) + ' more time(s) to start.</span>';
+      }
+    }
   });
   var runStarted = new URLSearchParams(window.location.search).get('run_started');
   if (runStarted && statusEl) {
