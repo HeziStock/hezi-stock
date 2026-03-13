@@ -1,4 +1,3 @@
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Mail } from "lucide-react"
 
@@ -21,18 +20,14 @@ export function CTA() {
             </p>
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/dashboard">
-                <Button size="lg" className="group px-8 py-6 text-lg bg-primary hover:bg-primary/90">
-                  Open Dashboard
-                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </Button>
-              </Link>
-              <a href="mailto:hezi.marudi@gmail.com?subject=HEZI%20STOCK%20Demo">
-                <Button size="lg" variant="outline" className="px-8 py-6 text-lg border-border hover:bg-secondary">
-                  <Mail className="mr-2 w-5 h-5" />
-                  Request Demo
-                </Button>
-              </a>
+              <Button size="lg" className="group px-8 py-6 text-lg bg-primary hover:bg-primary/90">
+                Open Dashboard
+                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Button>
+              <Button size="lg" variant="outline" className="px-8 py-6 text-lg border-border hover:bg-secondary">
+                <Mail className="mr-2 w-5 h-5" />
+                Request Demo
+              </Button>
             </div>
           </div>
         </div>

@@ -25,11 +25,18 @@
   --v0-chart-5: #a78bfa;
 }
 
+/* Force dark theme over Tailwind/preflight */
 body.v0-theme {
-  background-color: var(--v0-bg);
-  color: var(--v0-foreground);
+  background-color: var(--v0-bg) !important;
+  color: var(--v0-foreground) !important;
   font-family: system-ui, -apple-system, sans-serif;
-  antialiased: -webkit-antialiased;
+  -webkit-font-smoothing: antialiased;
+}
+body.v0-theme .v0-header {
+  background-color: var(--v0-bg) !important;
+}
+body.v0-theme main {
+  background-color: var(--v0-bg) !important;
 }
 
 .v0-theme .v0-header {

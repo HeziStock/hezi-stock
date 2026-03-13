@@ -6,10 +6,10 @@
   <title>HEZI STOCK — AI Market Insights</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
-  <link rel="stylesheet" href="{{ url_for('static', filename='v0-theme.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='v0-theme.css') }}?v=2">
   <style>
-    .v0-landing body { background: var(--v0-bg); color: var(--v0-foreground); }
-    .v0-gradient-text { background: linear-gradient(90deg, var(--v0-primary), var(--v0-chart-2), var(--v0-primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    body.v0-theme { background: #0f1115 !important; color: #f1f5f9 !important; }
+    .v0-gradient-text { background: linear-gradient(90deg, #2dd4bf, #60a5fa, #2dd4bf); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
   </style>
 </head>
 <body class="v0-theme v0-landing antialiased min-h-screen">

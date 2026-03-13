@@ -1,12 +1,8 @@
 "use client"
 
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Play, TrendingUp, Zap, BarChart3 } from "lucide-react"
-
-const API_BASE = typeof process !== "undefined" && process.env.NEXT_PUBLIC_HEZI_STOCK_API
-  ? process.env.NEXT_PUBLIC_HEZI_STOCK_API
-  : "http://localhost:5000"
+import Link from "next/link"
 
 export function Hero() {
   return (
@@ -56,18 +52,18 @@ export function Hero() {
 
         {/* CTA buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Link href="/dashboard">
-            <Button size="lg" className="group px-8 py-6 text-lg bg-primary hover:bg-primary/90">
+          <Button asChild size="lg" className="group px-8 py-6 text-lg bg-primary hover:bg-primary/90">
+            <Link href="/dashboard">
               Open Dashboard
               <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Button>
-          </Link>
-          <a href={`${API_BASE}/reports`} target="_blank" rel="noopener noreferrer">
-            <Button size="lg" variant="outline" className="px-8 py-6 text-lg border-border hover:bg-secondary">
+            </Link>
+          </Button>
+          <Button asChild size="lg" variant="outline" className="px-8 py-6 text-lg border-border hover:bg-secondary">
+            <Link href="/dashboard">
               <Play className="mr-2 w-5 h-5" />
               See Reports
-            </Button>
-          </a>
+            </Link>
+          </Button>
         </div>
 
         {/* Stats */}

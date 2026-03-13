@@ -6,10 +6,14 @@
   <title>{% block title %}HEZI STOCK{% endblock %}</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
-  <link rel="stylesheet" href="{{ url_for('static', filename='v0-theme.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='v0-theme.css') }}?v=2">
   <style>
     .card { border-radius: 0.75rem; padding: 1.5rem; transition: box-shadow 0.2s, background-color 0.2s; }
     .muted { color: var(--v0-muted-foreground); }
+    /* Critical: force v0 dark theme over any Tailwind reset */
+    body.v0-theme { background: #0f1115 !important; color: #f1f5f9 !important; }
+    body.v0-theme .v0-header { background: #0f1115 !important; }
+    body.v0-theme main { background: #0f1115 !important; }
   </style>
   {% block head %}{% endblock %}
 </head>

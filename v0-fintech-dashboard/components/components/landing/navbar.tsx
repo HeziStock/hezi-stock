@@ -3,15 +3,12 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { TrendingUp, Menu, X } from "lucide-react"
-
-const API_BASE = typeof process !== "undefined" && process.env.NEXT_PUBLIC_HEZI_STOCK_API
-  ? process.env.NEXT_PUBLIC_HEZI_STOCK_API
-  : "http://localhost:5000"
+import Link from "next/link"
 
 const navLinks = [
   { label: "Features", href: "#features" },
   { label: "How it Works", href: "#how-it-works" },
-  { label: "Reports", href: `${API_BASE}/reports` },
+  { label: "Reports", href: "#reports" },
 ]
 
 export function Navbar() {
@@ -43,16 +40,12 @@ export function Navbar() {
 
         {/* Desktop CTA */}
         <div className="hidden md:flex items-center gap-3">
-          <a href={`mailto:hezi.marudi@gmail.com?subject=HEZI%20STOCK%20Demo`}>
-            <Button variant="ghost" size="sm">
-              Request Demo
-            </Button>
-          </a>
-          <a href="/dashboard">
-            <Button size="sm" className="bg-primary hover:bg-primary/90">
-              Open Dashboard
-            </Button>
-          </a>
+          <Button variant="ghost" size="sm">
+            Request Demo
+          </Button>
+          <Button asChild size="sm" className="bg-primary hover:bg-primary/90">
+            <Link href="/dashboard">Open Dashboard</Link>
+          </Button>
         </div>
 
         {/* Mobile menu button */}
@@ -83,16 +76,12 @@ export function Navbar() {
               </a>
             ))}
             <div className="pt-4 flex flex-col gap-2">
-              <a href={`mailto:hezi.marudi@gmail.com?subject=HEZI%20STOCK%20Demo`} className="w-full">
-                <Button variant="outline" className="w-full">
-                  Request Demo
-                </Button>
-              </a>
-              <a href="/dashboard" className="w-full">
-                <Button className="w-full bg-primary hover:bg-primary/90">
-                  Open Dashboard
-                </Button>
-              </a>
+              <Button variant="outline" className="w-full">
+                Request Demo
+              </Button>
+              <Button asChild className="w-full bg-primary hover:bg-primary/90">
+                <Link href="/dashboard">Open Dashboard</Link>
+              </Button>
             </div>
           </div>
         </div>
